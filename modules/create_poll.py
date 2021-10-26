@@ -4,7 +4,7 @@ import json
 import datetime
 import componets
 import random
-from discord_components import Button,ButtonStyle
+from discord_components import Button, ButtonStyle
 import math
 import asyncio
 
@@ -74,6 +74,19 @@ class PollModule(commands.Cog):
 
         else:
             raise commands.errors.MissingPermissions('admin')
+
+    @create_poll.error
+    async def create_embed_error(self, ctx, error):
+        if isinstance(error, KeyError):
+            await ctx.send(':exclamation:`Ошибка в структуре аргумента!`')
+        elif isinstance(error, commands.errors.MissingPermissions):
+            await ctx.send(':no_entry:`Требуются права администратора!`')
+        elif isinstance(error, commands.errors.MissingRequiredArgument):
+            await ctx.send(':exclamation:`Необходимо передать данные в JSON формате`')
+        elif isinstance(error, json.decoder.JSONDecodeError):
+            await ctx.send(':exclamation:`Ошибка в структуре аргумента!`')
+        elif isinstance(error, commands.errors.CommandInvokeError):
+            await ctx.send(f':exclamation:`Произошла внутренняя ошибка : {error}`')
 
 
 def setup(bot):

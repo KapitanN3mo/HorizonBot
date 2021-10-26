@@ -22,7 +22,7 @@ class ServiceModule(commands.Cog):
             comm_list.pop('help')
             comm_list.pop(name)
 
-        await ctx.send('`Файл справки не найден для ролей:\n' + '\n'.join(comm_list) + '`')
+        await ctx.send('`Файл справки не найден для команд:\n' + '\n'.join(comm_list) + '`')
 
 
 def setup(bot):
