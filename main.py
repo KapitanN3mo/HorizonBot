@@ -16,7 +16,7 @@ async def on_ready():
 
 
 for module in os.listdir('modules'):
-    print(module)
     if module.endswith('.py'):
-        bot.load_extension(f'modules.{module.replace(".py","")}')
+        print(f'Загружен модуль {module}')
+        bot.load_extension(f'modules.{module.replace(".py", "")}')
 bot.run(config.token)
