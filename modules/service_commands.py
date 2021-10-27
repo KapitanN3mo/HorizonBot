@@ -1,11 +1,19 @@
+import logging
 import discord
 from discord.ext import commands
 import os
+
+logger = logging.getLogger('EVENTS')
 
 
 class ServiceModule(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+
+    @commands.Cog.listener()
+    async def on_ready(self):
+        print('Ready!')
+        logger.info('Бот успешно запущен!')
 
     @commands.has_role(901491325969522768)
     @commands.command()
