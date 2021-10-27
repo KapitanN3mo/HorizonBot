@@ -17,12 +17,12 @@ class ServiceModule(commands.Cog):
             if f'{command_name}.txt' in help_texts:
                 print(comm_list)
                 ok_help.append(command_name)
+        comm_list.pop('get_no_help')
+        comm_list.pop('help')
         for name in ok_help:
-            comm_list.pop('get_no_help')
-            comm_list.pop('help')
             comm_list.pop(name)
 
-        await ctx.send('`Файл справки не найден для команд:\n' + '\n'.join(comm_list) + '`')
+        await ctx.send('```Файл справки не найден для команд:\n' + '\n'.join(comm_list) + '```')
 
 
 def setup(bot):
