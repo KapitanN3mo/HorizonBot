@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-import config
+from componets import config
 import json
 
 
@@ -8,7 +8,9 @@ class CreateStringlessEmbedModule(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.has_role(config.admin_role)
+    admin_role = int(config.get('Global', 'admin_role'))
+
+    @commands.has_role(admin_role)
     @commands.command()
     async def create_stringless_embed(self, ctx, channel: discord.TextChannel, *, data):
         if ctx.message.author.guild_permissions.administrator:
