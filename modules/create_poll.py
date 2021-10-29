@@ -7,12 +7,16 @@ import random
 from discord_components import Button, ButtonStyle
 import math
 import asyncio
+from componets import config
 
 
 class PollModule(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+    admin_role = int(config.get('Global', 'admin_role'))
+
+    @commands.has_role(admin_role)
     @commands.command()
     async def create_poll(self, ctx, channel: discord.TextChannel, *, poll_info: str):
         if ctx.message.author.guild_permissions.administrator:
