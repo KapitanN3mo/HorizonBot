@@ -6,7 +6,8 @@ from componets import config
 import logging
 
 intents = discord.Intents().all()
-bot = commands.Bot(command_prefix='h.', intents=intents)
+intents.members = True
+bot = commands.Bot(command_prefix='h.', case_insensitive=True, intents=intents)
 bot.remove_command('help')
 DiscordComponents(bot=bot)
 
