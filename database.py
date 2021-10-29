@@ -10,7 +10,18 @@ in_voice_time INT NOT NULL,
 status TEXT,
 warns TEXT,
 sys_info TEXT,
-last_voice_time
+last_voice_time TEXT
+);''')
+
+cursor.execute('''CREATE TABLE IF NOT EXISTS react_role(
+id INT PRIMARY KEY,
+info TEXT);''')
+cursor.execute('''CREATE TABLE IF NOT EXISTS warns(
+id INTEGER PRIMARY KEY,
+user INTEGER NOT NULL,
+owner INT NOT NULL,
+reason TEXT,
+datetime TEXT NOT NULL,
+expiration INT NOT NULL
 );''')
 db.commit()
-
