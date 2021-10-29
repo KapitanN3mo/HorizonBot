@@ -1,4 +1,5 @@
 import datetime
+import json
 import math
 import discord
 from discord.ext import commands
@@ -45,8 +46,17 @@ class VoiceModule(commands.Cog):
             total_xp = before_xp + voice_xp
             cursor.execute(f'UPDATE server_users SET xp = {total_xp} WHERE id = {member.id}')
             db.commit()
-            await member.send(
-                f'Вы общались {duration // 3600} часов {duration // 60} минут. Начислен опыт: {voice_xp} очков')
+            cursor.execute(f'SELECT sys_info FROM server_users WHERE id = {member.id}')
+            res = cursor.fetchone()
+            if res is None:
+                print('Voice ошибка чтения из БД')
+                return
+            sys_info = json.loads(res[0])
+            if sys_info['send_dm_voice'] == 'true':
+                hours = duration // 3600
+                minutes = (duration - (hours*3600)) // 60
+                await member.send(
+                    f'Вы общались {hours} часов {minutes} минут. Начислен опыт: {voice_xp} очков')
 
 
 def setup(bot):
