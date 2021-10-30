@@ -9,6 +9,9 @@ class BanModule(commands.Cog):
     @commands.has_permissions(ban_members=True)
     @commands.command()
     async def ban(self, ctx, user: discord.Member, *reason):
+        if user == ctx.author:
+            await ctx.send(':face_with_raised_eyebrow: `Ты чё, дурак что ли? Ты сам себя забанить решил? Молодец!`')
+            return
         if reason == ():
             reas = 'Причина не указана'
         else:
@@ -21,6 +24,8 @@ class BanModule(commands.Cog):
 
     @ban.error
     async def ban_error(self, ctx, error):
+        if isinstance(error, commands.errors.CommandInvokeError):
+            await ctx.send(f':sob: `Ой,я не могу забанить этого человека!`')
         if isinstance(error, commands.errors.MissingPermissions):
             await ctx.send('`:no_entry: У вас недостаточно прав для бана пользователя!`')
 
