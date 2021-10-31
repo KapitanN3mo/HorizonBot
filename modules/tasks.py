@@ -34,7 +34,9 @@ class EventsModule(commands.Cog):
                     db.commit()
                     print(f'Удалён варн {warn_id}')
                     user = self.bot.get_user(user)
-                    await channel.send(f':grin: `С пользователя {user.name} снят варн №{warn_id} по истечении срока`')
+                    if user is not None:
+                        user = user.name
+                    await channel.send(f':grin: `С пользователя {user} снят варн №{warn_id} по истечении срока`')
             await asyncio.sleep(300)
 
 

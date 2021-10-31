@@ -5,6 +5,7 @@ from componets import get_str_msk_datetime, get_msk_datetime, datetime_format
 from database import cursor, db
 import discord
 from discord.ext import commands
+from discord_components import Button, ButtonStyle, Select
 
 
 class WarnModule(commands.Cog):
@@ -19,8 +20,9 @@ class WarnModule(commands.Cog):
             warn_id = 0
         else:
             warn_id = max_id[0] + 1
-        warn_info = [warn_id, user.id, user.id, reason, get_str_msk_datetime(), expiration]
-        cursor.execute('INSERT INTO warns VALUES(?,?,?,?,?,?)', warn_info)
+        cursor.execute(
+            f'INSERT INTO warns (user,owner,reason,datetime,expiration) '
+            f'VALUES({user.id},{user.id},"{reason}","{get_str_msk_datetime()}",{expiration})')
         db.commit()
         cursor.execute(f'SELECT Count(*) FROM warns WHERE user = {user.id}')
         warns_count = cursor.fetchone()[0]
@@ -55,8 +57,9 @@ class WarnModule(commands.Cog):
             warn_id = 0
         else:
             warn_id = max_id[0] + 1
-        warn_info = [warn_id, user.id, ctx.author.id, reason, get_str_msk_datetime(), expiration]
-        cursor.execute('INSERT INTO warns VALUES(?,?,?,?,?,?)', warn_info)
+        cursor.execute(
+            f'INSERT INTO warns (user,owner,reason,datetime,expiration) '
+            f'VALUES({user.id},{ctx.author.id},"{reason}","{get_str_msk_datetime()}",{expiration})')
         db.commit()
         cursor.execute(f'SELECT Count(*) FROM warns WHERE user = {user.id}')
         warns_count = cursor.fetchone()[0]
@@ -83,33 +86,71 @@ class WarnModule(commands.Cog):
 
     @commands.has_permissions(kick_members=True)
     @commands.command()
-    async def get_warns(self, ctx: commands.Context, user: discord.User):
-        cursor.execute(f'SELECT id,owner,datetime,expiration FROM warns WHERE user = {user.id}')
+    async def warns(self, ctx: commands.Context, user):
+        if user == 'all':
+            cursor.execute(f'SELECT id,user,owner,datetime,expiration FROM warns')
+        if isinstance(user, discord.User):
+            cursor.execute(f'SELECT id,user,owner,datetime,expiration FROM warns WHERE user = {user.id}')
         result = cursor.fetchall()
         if not result:
-            await ctx.send(':regional_indicator_n: :regional_indicator_o: `У пользователя не найдено предупреждений!`')
+            await ctx.send(':regional_indicator_n: :regional_indicator_o: `Не найдено предупреждений!`')
             return
-        embed = discord.Embed(title=f'Предупрежденеия пользователя {user}', color=discord.Colour.random())
+        embed = discord.Embed(title=f'Предупрежденеия:', color=discord.Colour.random())
         for warn in result:
-            warn_id, owner, issue_time, expiration = warn
+            warn_id, user_name, owner, issue_time, expiration = warn
             expiration_time = (datetime.datetime.strptime(issue_time, datetime_format) + datetime.timedelta(
                 days=expiration) - get_msk_datetime().replace(tzinfo=None)).days
+            print(owner)
             owner = self.bot.get_user(owner)
+            user_name = self.bot.get_user(user_name)
+            if owner is not None:
+                owner = owner.name
+            if user_name is not None:
+                user_name = user_name.name
+            print(owner)
             embed.add_field(name=f'Warn#{warn_id}',
-                            value=f'Выдан {owner.name} {issue_time} на {expiration} дней. Истечение через {expiration_time}:',
+                            value=f'Выдал {owner} -> {user_name} {issue_time} на {expiration} дней. Истечение через {expiration_time}:',
                             inline=False)
         await ctx.send(embed=embed)
 
+    @warns.error
+    async def warns_error(self, ctx, error):
+        if isinstance(error, commands.errors.MissingRequiredArgument):
+            await ctx.send(':exclamation: `Необходимо указать пользователя.`')
+        else:
+            await ctx.send(f':exclamation:`Произошла внутренняя ошибка : {error}`')
+
     @commands.has_permissions(kick_members=True)
     @commands.command()
-    async def remove_warn(self, ctx: commands.Context, warn_id: int):
-        try:
+    async def remove_warn(self, ctx: commands.Context, user: discord.User, warn_id: int):
+        cursor.execute(f'SELECT user FROM warns WHERE id={warn_id}')
+        res = cursor.fetchone()
+        if res is None:
+            await ctx.send(f':x: `Такого варна не существует`')
+            return
+        if res[0] == user.id:
             cursor.execute(f'DELETE FROM warns WHERE id = {warn_id}')
             db.commit()
-        except Exception as ex:
-            await ctx.send(f':exclamation:`Произошла внутренняя ошибка : {ex}`')
-            return
-        await ctx.send(':white_check_mark: `Если такой варн существовал, то он удалён!`')
+            await ctx.send(f':white_check_mark: `Варн №{warn_id} был удалён! Пользователь {user}`')
+
+    @commands.has_permissions(kick_members=True)
+    @commands.command()
+    async def clear_warns(self, ctx: commands.Context, user: discord.User):
+        comp = [[Button(label='Да', style=ButtonStyle.green), Button(label='Нет', style=ButtonStyle.red)]]
+        await ctx.send(f':question: Вы действительно хотите очистить варны пользователя {user}', components=comp)
+        start_time = get_msk_datetime().replace(tzinfo=None)
+        while (get_msk_datetime().replace(tzinfo=None) - start_time).seconds < 120:
+            print((get_msk_datetime().replace(tzinfo=None) - start_time).seconds)
+            confirm_response = await self.bot.wait_for('button_click')
+            if confirm_response.author == ctx.message.author and confirm_response.component.label == 'Да':
+                await confirm_response.respond(
+                    content=f':ok_hand: Все предупреждения пользователя {user} будут удалены')
+                cursor.execute(f'DELETE FROM warns WHERE user = {user.id}')
+                db.commit()
+                break
+            elif confirm_response.author == ctx.message.author and confirm_response.component.label == 'Нет':
+                await confirm_response.respond(content=f':x: Действие отменено')
+                break
 
 
 def setup(bot):

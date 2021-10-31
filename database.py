@@ -24,4 +24,12 @@ reason TEXT,
 datetime TEXT NOT NULL,
 expiration INT NOT NULL
 );''')
+cursor.execute('''CREATE TABLE IF NOT EXISTS bans(
+id INTEGER PRIMARY KEY,
+user INTEGER NOT NULL,
+user_name TEXT NOT NULL,
+owner INT NOT NULL,
+reason TEXT,
+datetime TEXT NOT NULL);
+''')
 db.commit()

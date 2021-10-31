@@ -4,7 +4,7 @@ import configparser
 
 def get_msk_datetime() -> datetime.datetime:
     delta = datetime.timedelta(hours=3, minutes=0)
-    return datetime.datetime.now(datetime.timezone.utc) + delta
+    return (datetime.datetime.now(datetime.timezone.utc) + delta).replace(tzinfo=None)
 
 
 def get_str_msk_datetime() -> str:
@@ -42,6 +42,12 @@ class ConfigWithCommit():
     def remove_section(self, section):
         self.config.remove_section(section)
         self.commit()
+
+    def has_option(self, section, option):
+        return self.config.has_option(section, option)
+
+    def has_section(self, section):
+        return self.config.has_section(section)
 
     def commit(self):
         with open(self.path, 'w') as file:

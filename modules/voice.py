@@ -16,7 +16,6 @@ class VoiceModule(commands.Cog):
     async def on_voice_state_update(self, member: discord.User, before: discord.VoiceState,
                                     after: discord.VoiceState):
         if before.channel is None and after.channel is not None:
-            print('entry')
             try:
                 temp_file.remove_section(str(member.id))
             except Exception as ex:
@@ -25,6 +24,22 @@ class VoiceModule(commands.Cog):
             temp_file.set(str(member.id), 'entry',
                           get_str_msk_datetime())
             temp_file.commit()
+            print(after.channel.id)
+            if after.channel.id == int(config.get('Global', 'private_voice_channel')):
+                print('create private')
+                category = after.channel.category
+                owner = discord.utils.get(category.guild.members, id=member.id)
+                private_channel = await category.create_voice_channel(name=owner.name,
+                                                                      reason=f'Приватный канал по запросу {member.name}')
+                overwrite = discord.PermissionOverwrite()
+                overwrite.manage_channels = True
+                await private_channel.set_permissions(owner, overwrite=overwrite)
+                if not temp_file.has_section('private'):
+                    temp_file.add_section('private')
+                temp_file.set('private', str(private_channel.id), str(owner.id))
+                temp_file.commit()
+                await owner.move_to(private_channel)
+
         if before.channel is not None and after.channel is None:
             entry_time = temp_file.get(str(member.id), 'entry')
             entry_time = datetime.datetime.strptime(entry_time, '%Y-%m-%d-%H-%M')
@@ -54,9 +69,36 @@ class VoiceModule(commands.Cog):
             sys_info = json.loads(res[0])
             if sys_info['send_dm_voice'] == 'true':
                 hours = duration // 3600
-                minutes = (duration - (hours*3600)) // 60
+                minutes = (duration - (hours * 3600)) // 60
                 await member.send(
                     f'Вы общались {hours} часов {minutes} минут. Начислен опыт: {voice_xp} очков')
+            if temp_file.has_section('private'):
+                if temp_file.has_option('private', str(before.channel.id)):
+                    clients = before.channel.members
+                    if not clients:
+                        print('remove_private')
+                        await before.channel.delete(reason='Автоудаление пустого приватного канала')
+        if before.channel is not None and after.channel is not None:
+            if after.channel.id == int(config.get('Global', 'private_voice_channel')):
+                print('create private')
+                category = after.channel.category
+                owner = discord.utils.get(category.guild.members, id=member.id)
+                private_channel = await category.create_voice_channel(name=owner.name,
+                                                                      reason=f'Приватный канал по запросу {member.name}')
+                overwrite = discord.PermissionOverwrite()
+                overwrite.manage_channels = True
+                await private_channel.set_permissions(owner, overwrite=overwrite)
+                if not temp_file.has_section('private'):
+                    temp_file.add_section('private')
+                temp_file.set('private', str(private_channel.id), str(owner.id))
+                temp_file.commit()
+                await owner.move_to(private_channel)
+            if temp_file.has_section('private'):
+                if temp_file.has_option('private', str(before.channel.id)):
+                    clients = before.channel.members
+                    if not clients:
+                        print('remove_private')
+                        await before.channel.delete(reason='Автоудаление пустого приватного канала')
 
 
 def setup(bot):
