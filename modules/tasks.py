@@ -15,6 +15,7 @@ class EventsModule(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         print('Бот готов, бан-хаммер блестит!')
+        await self.bot.change_presence(status=discord.Status.online,activity=discord.Activity(type=discord.ActivityType.watching,name='кого-бы забанить?'))
         for task in self.tasks:
             self.bot.loop.create_task(task())
 
