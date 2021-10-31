@@ -4,7 +4,6 @@ import discord
 from discord.ext import commands
 import os
 
-logger = logging.getLogger('EVENTS')
 
 
 class ServiceModule(commands.Cog):
