@@ -54,11 +54,8 @@ class PollModule(commands.Cog):
             if delay // 60 > 60:
                 msg += f'(Это {math.ceil(delay / 60 / 60)} часа!)'
             await ctx.send(msg, components=comp)
-            print('await respond')
             confirm_response = await self.bot.wait_for('button_click')
-            print('await respond 0-2 ')
             if confirm_response.author == ctx.message.author and confirm_response.channel == ctx.message.channel:
-                print('respond')
                 if confirm_response.component.label == 'Продолжить':
                     await confirm_response.respond(content='ОК :ok_hand:')
                     await asyncio.sleep(delay)

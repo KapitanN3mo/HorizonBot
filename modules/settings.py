@@ -2,6 +2,7 @@ import json
 import discord
 from discord.ext import commands
 from database import cursor, db
+from componets import config
 
 
 class MembersCommands(commands.Cog):
@@ -36,6 +37,38 @@ class MembersCommands(commands.Cog):
 
         elif isinstance(error, commands.errors.CommandInvokeError):
             await ctx.send(f':exclamation:`Произошла внутренняя ошибка : {error}`')
+
+    admin_role = int(config.get('Global', 'admin_role'))
+
+    @commands.has_role(admin_role)
+    @commands.command()
+    async def settings_set(self, ctx, section, option, value):
+        if config.has_section(section):
+            if config.has_option(section, option):
+                if option == 'token' and section == 'Global':
+                    await ctx.send('`Я не знаю откуда ты об этом узнал, но нет.')
+                    return
+                config.set(section, option, value)
+                config.commit()
+                await ctx.send(f':white_check_mark:`Значение {section}.{option} установлено на {value}`')
+            else:
+                await ctx.send(f':exclamation: `Не найдена опция {option}`')
+        else:
+            await ctx.send(f':exclamation: `Не найдена секция {section}`')
+
+    @commands.has_role(admin_role)
+    @commands.command()
+    async def settings_list(self, ctx):
+        message = '```'
+        for section in config.config.sections():
+            message += f'{section}:\n'
+            for option in config.config.options(section):
+                if option == 'token':
+                    continue
+                value = config.get(section, option)
+                message += f'--> {option} --> {value}\n'
+        message += '```'
+        await ctx.send(message)
 
 
 def setup(bot):

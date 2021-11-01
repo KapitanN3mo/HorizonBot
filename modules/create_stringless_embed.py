@@ -15,7 +15,6 @@ class CreateStringlessEmbedModule(commands.Cog):
     async def create_stringless_embed(self, ctx, channel: discord.TextChannel, *, data):
         if ctx.message.author.guild_permissions.administrator:
             data = data.replace('\n', '\\n')
-            print(data)
             data = json.loads(data)
             title = data['title']
             text = data['text']

@@ -5,7 +5,6 @@ from discord.ext import commands
 import os
 
 
-
 class ServiceModule(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -18,7 +17,6 @@ class ServiceModule(commands.Cog):
         ok_help = []
         for command_name in comm_list:
             if f'{command_name}.txt' in help_texts:
-                print(comm_list)
                 ok_help.append(command_name)
         comm_list.pop('get_no_help')
         comm_list.pop('help')

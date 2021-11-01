@@ -33,7 +33,6 @@ class EventsModule(commands.Cog):
                 if expiration_time <= get_msk_datetime().replace(tzinfo=None):
                     cursor.execute(f'DELETE FROM warns WHERE id = {warn_id} ')
                     db.commit()
-                    print(f'Удалён варн {warn_id}')
                     user = self.bot.get_user(user)
                     if user is not None:
                         user = user.name
