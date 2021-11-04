@@ -2,7 +2,7 @@ import asyncio
 import datetime
 import discord
 from discord.ext import commands
-from database import cursor, db
+from database import *
 from componets import datetime_format, get_msk_datetime, config
 
 
@@ -21,7 +21,7 @@ class EventsModule(commands.Cog):
 
     async def check_warns(self):
         while True:
-            cursor.execute('SELECT * FROM warns')
+            cursor.execute(sql.SQL('SELECT * FROM warns'))
             warns = cursor.fetchall()
             channel = self.bot.get_channel(int(config.get('Global', 'notify_channel')))
             for warn in warns:
@@ -31,7 +31,9 @@ class EventsModule(commands.Cog):
                 expiration_time = datetime.datetime.strptime(issued_datetime, datetime_format) + datetime.timedelta(
                     days=expiration)
                 if expiration_time <= get_msk_datetime().replace(tzinfo=None):
-                    cursor.execute(f'DELETE FROM warns WHERE id = {warn_id} ')
+                    cursor.execute(sql.SQL('DELETE FROM warns WHERE id = {warn_id}').format(
+                        warn_id=sql.Literal(warn_id)
+                    ))
                     db.commit()
                     user = self.bot.get_user(user)
                     if user is not None:

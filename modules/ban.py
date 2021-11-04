@@ -23,20 +23,20 @@ class BanModule(commands.Cog):
         if reason == '':
             reason = 'Причина не указана'
         await user.ban(reason=reason)
-        cursor.execute(
-            f'INSERT INTO bans(user,user_name,owner,reason,datetime) VALUES({user.id},"{user.display_name}",{ctx.author.id},"{reason}","{get_str_msk_datetime()}")')
+        # cursor.execute(
+        #     f'INSERT INTO bans(user,user_name,owner,reason,datetime) VALUES({user.id},"{user.display_name}",{ctx.author.id},"{reason}","{get_str_msk_datetime()}")')
         logger.audit(f'{ctx.author} забанил {user} по причине {reason}')
-        db.commit()
+        # db.commit()
         await ctx.send(f':white_check_mark: `Пользователь {user.display_name} забанен!`')
 
     @ban.error
     async def ban_error(self, ctx, error):
-        if isinstance(error, commands.errors.CommandInvokeError):
-            await ctx.send(f':sob: `Ой,я не могу забанить этого человека!`')
-        if isinstance(error, commands.errors.MissingPermissions):
-            await ctx.send('`:no_entry: У вас недостаточно прав для бана пользователя!`')
-        else:
+        if isinstance(error.original, discord.errors.Forbidden):
+            await ctx.send(f':sob: `Ой,я не могу забанить этого человека! Недостаточно прав!`')
+        elif isinstance(error, commands.errors.CommandInvokeError):
             await ctx.send(f':exclamation:`Произошла внутренняя ошибка : {error}`')
+        elif isinstance(error, commands.errors.MissingPermissions):
+            await ctx.send('`:no_entry: У вас недостаточно прав для бана пользователя!`')
 
     # @commands.has_permissions(ban_members=True)
     # @commands.command()

@@ -1,7 +1,7 @@
 import json
 import discord
 from discord.ext import commands
-from database import cursor, db
+from database import *
 from componets import config
 
 
@@ -17,7 +17,9 @@ class MembersCommands(commands.Cog):
             mode = 'false'
         else:
             raise commands.errors.MissingRequiredArgument('')
-        cursor.execute(f'SELECT sys_info FROM server_users WHERE id = {ctx.author.id}')
+        cursor.execute(sql.SQL('SELECT sys_info FROM server_users WHERE id = {author_id}').format(
+            author_id=sql.Literal(ctx.author.id)
+        ))
         res = cursor.fetchone()
         if res is None:
             print('User settings ошибка запроса в БД')
@@ -25,7 +27,10 @@ class MembersCommands(commands.Cog):
             return
         sys_data = json.loads(res[0])
         sys_data['send_dm_voice'] = mode
-        cursor.execute(f'UPDATE server_users SET sys_info = (?) WHERE id = {ctx.author.id}', (json.dumps(sys_data),))
+        cursor.execute(sql.SQL('UPDATE server_users SET sys_info = {sys_info} WHERE id = {author_id}').format(
+            sys_info=sql.Literal(json.dumps(sys_data)),
+            author_id=sql.Literal(ctx.author.id)
+        ))
         db.commit()
         await ctx.send(f':white_check_mark: `Настройка settings_voice_time_notify установлена на {mode}`')
 

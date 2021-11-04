@@ -4,7 +4,7 @@ import os
 import discord
 from discord.ext import commands
 from componets import config, convert_number_to_emoji
-from database import cursor, db
+from database import *
 
 
 class GameReactModule(commands.Cog):
@@ -67,12 +67,16 @@ class GameReactModule(commands.Cog):
         if message_to_remove is None:
             await ctx.send('```Ой, произошла ошибка! Не удлаось найти сообщение!```')
             return
-        cursor.execute(f'SELECT * FROM react_role WHERE id = {message_to_remove.id}')
+        cursor.execute(sql.SQL('SELECT * FROM react_role WHERE id = {message_to_remove_id}').format(
+            message_to_remove_id=sql.Literal(message_to_remove.id)
+        ))
         res = cursor.fetchone()
         if res is None:
             await ctx.send('```Сообщение которое вы пытаетесь удалить не относиться к системе выдаче ролей!```')
             return
-        cursor.execute(f'DELETE FROM react_role WHERE id = {message_id} ')
+        cursor.execute(sql.SQL('DELETE FROM react_role WHERE id = {message_id}').format(
+            message_id=sql.Literal(message_id)
+        ))
         db.commit()
         await message_to_remove.delete()
         await ctx.send(f'```Отлично, сообщение удалено!```')
@@ -107,7 +111,10 @@ class GameReactModule(commands.Cog):
         for data in save_data:
             message = data['message_id']
             role_info = data['info']
-            cursor.execute('INSERT INTO react_role VALUES (?,?)', [message, json.dumps(role_info)])
+            cursor.execute(sql.SQL('INSERT INTO react_role(id,info) VALUES ({message_id},{role_info})').format(
+                id=sql.Literal(message),
+                info=sql.Literal(json.dumps(role_info))
+            ))
         db.commit()
         self.load_role_data()
 

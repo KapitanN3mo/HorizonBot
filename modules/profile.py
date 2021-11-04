@@ -1,7 +1,7 @@
 import math
 import discord
 from discord.ext import commands
-from database import cursor, db
+from database import *
 from componets import config
 
 
@@ -13,8 +13,10 @@ class ProfileModule(commands.Cog):
     async def profile(self, ctx: commands.Context, user: discord.User or None = None):
         if user is None:
             user = ctx.author
-        cursor.execute(
-            f'SELECT message_count,xp,in_voice_time,status,warns,last_voice_time FROM server_users WHERE id = {user.id}')
+        cursor.execute(sql.SQL(
+            'SELECT message_count,xp,in_voice_time,status,warns,last_voice_time FROM server_users WHERE id = {user_id}').format(
+            user_id=sql.Literal(user.id)
+        ))
         result = cursor.fetchone()
         if result is None:
             await ctx.send('Это ваше первое сообщение! Ваш профиль создан!')

@@ -2,7 +2,7 @@ import asyncio
 import datetime
 import json
 from componets import get_str_msk_datetime, get_msk_datetime, datetime_format
-from database import cursor, db
+from database import *
 import discord
 from discord.ext import commands
 from discord_components import Button, ButtonStyle, Select
@@ -13,17 +13,19 @@ class WarnModule(commands.Cog):
         self.bot = bot
 
     async def auto_warn(self, channel: discord.TextChannel, user: discord.User, expiration: int, reason: str):
-        cursor.execute('SELECT MAX(id) FROM warns')
-        max_id = cursor.fetchone()
-        if max_id[0] is None:
-            warn_id = 0
-        else:
-            warn_id = max_id[0] + 1
-        cursor.execute(
-            f'INSERT INTO warns (user,owner,reason,datetime,expiration) '
-            f'VALUES({user.id},{user.id},"{reason}","{get_str_msk_datetime()}",{expiration})')
+        cursor.execute(sql.SQL(
+            'INSERT INTO warns (user,owner,reason,datetime,expiration) '
+            'VALUES({user_id},{owner_id},{reason},{datetime},{expiration})').format(
+            user_id=sql.Literal(user.id),
+            owner_id=sql.Literal(self.bot.user.id),
+            reason=sql.Literal(reason),
+            datetime=sql.Literal(get_str_msk_datetime()),
+            expiration=sql.Literal(expiration)
+        ))
         db.commit()
-        cursor.execute(f'SELECT Count(*) FROM warns WHERE user = {user.id}')
+        cursor.execute(sql.SQL('SELECT Count(*) FROM warns WHERE user = {user_id}').format(
+            user_id=sql.Literal(user.id)
+        ))
         warns_count = cursor.fetchone()[0]
         embed = discord.Embed(title=f'Выдано предупреждение!', colour=discord.Colour.red())
         embed.add_field(name='Кому:', value=user.mention)
@@ -49,18 +51,19 @@ class WarnModule(commands.Cog):
     @commands.has_permissions(kick_members=True)
     @commands.command()
     async def warn(self, ctx: commands.Context, user: discord.User, expiration: int, *, reason: str):
-        cursor.execute('SELECT MAX(id) FROM warns')
-        max_id = cursor.fetchone()
-
-        if max_id[0] is None:
-            warn_id = 0
-        else:
-            warn_id = max_id[0] + 1
-        cursor.execute(
-            f'INSERT INTO warns (user,owner,reason,datetime,expiration) '
-            f'VALUES({user.id},{ctx.author.id},"{reason}","{get_str_msk_datetime()}",{expiration})')
+        cursor.execute(sql.SQL(
+            'INSERT INTO warns("user",owner,reason,datetime,expiration) '
+            'VALUES({user_id},{owner_id},{reason},{datetime},{expiration})').format(
+            user_id=sql.Literal(user.id),
+            owner_id=sql.Literal(ctx.author.id),
+            reason=sql.Literal(reason),
+            datetime=sql.Literal(get_str_msk_datetime()),
+            expiration=sql.Literal(expiration)
+        ))
         db.commit()
-        cursor.execute(f'SELECT Count(*) FROM warns WHERE user = {user.id}')
+        cursor.execute(sql.SQL('SELECT Count(*) FROM warns WHERE "user" = {user_id}').format(
+            user_id=sql.Literal(user.id)
+        ))
         warns_count = cursor.fetchone()[0]
         embed = discord.Embed(title=f'Выдано предупреждение!', colour=discord.Colour.red())
         embed.add_field(name='Кому:', value=user.mention)
@@ -85,22 +88,30 @@ class WarnModule(commands.Cog):
 
     @commands.has_permissions(kick_members=True)
     @commands.command()
-    async def warns(self, ctx: commands.Context, user):
+    async def warns(self, ctx: commands.Context, user: str):
         if user == 'all':
-            cursor.execute(f'SELECT id,user,owner,datetime,expiration FROM warns')
-        if isinstance(user, discord.User):
-            cursor.execute(f'SELECT id,user,owner,datetime,expiration FROM warns WHERE user = {user.id}')
+            cursor.execute(sql.SQL('SELECT id,user,owner,datetime,expiration FROM warns'))
+        else:
+            user = user.replace('<', '').replace('>', '').replace('@', '').replace('!', '')
+            user = self.bot.get_user(int(user))
+            if user is None:
+                raise Exception(':exclamation: `Такого пользователя не существует`')
+            cursor.execute(
+                sql.SQL('SELECT id,"user",owner,datetime,expiration FROM warns WHERE "user" = {user_id}').format(
+                    user_id=sql.Literal(user.id)
+                ))
         result = cursor.fetchall()
+        print(result)
         if not result:
             await ctx.send(':regional_indicator_n: :regional_indicator_o: `Не найдено предупреждений!`')
             return
         embed = discord.Embed(title=f'Предупрежденеия:', color=discord.Colour.random())
         for warn in result:
-            warn_id, user_name, owner, issue_time, expiration = warn
+            warn_id, user_id, owner, issue_time, expiration = warn
             expiration_time = (datetime.datetime.strptime(issue_time, datetime_format) + datetime.timedelta(
                 days=expiration) - get_msk_datetime().replace(tzinfo=None)).days
             owner = self.bot.get_user(owner)
-            user_name = self.bot.get_user(user_name)
+            user_name = self.bot.get_user(user_id)
             if owner is not None:
                 owner = owner.name
             if user_name is not None:
@@ -114,19 +125,25 @@ class WarnModule(commands.Cog):
     async def warns_error(self, ctx, error):
         if isinstance(error, commands.errors.MissingRequiredArgument):
             await ctx.send(':exclamation: `Необходимо указать пользователя.`')
+        elif isinstance(error,Exception):
+            await ctx.send(error.__context__)
         else:
             await ctx.send(f':exclamation:`Произошла внутренняя ошибка : {error}`')
 
     @commands.has_permissions(kick_members=True)
     @commands.command()
     async def remove_warn(self, ctx: commands.Context, user: discord.User, warn_id: int):
-        cursor.execute(f'SELECT user FROM warns WHERE id={warn_id}')
+        cursor.execute(sql.SQL('SELECT user FROM warns WHERE id={warn_id}').format(
+            warn_id=sql.Literal(warn_id)
+        ))
         res = cursor.fetchone()
         if res is None:
             await ctx.send(f':x: `Такого варна не существует`')
             return
         if res[0] == user.id:
-            cursor.execute(f'DELETE FROM warns WHERE id = {warn_id}')
+            cursor.execute(sql.SQL('DELETE FROM warns WHERE id = {warn_id}').format(
+                warn_id=sql.Literal(warn_id)
+            ))
             db.commit()
             await ctx.send(f':white_check_mark: `Варн №{warn_id} был удалён! Пользователь {user}`')
 
@@ -141,7 +158,9 @@ class WarnModule(commands.Cog):
             if confirm_response.author == ctx.message.author and confirm_response.component.label == 'Да':
                 await confirm_response.respond(
                     content=f':ok_hand: Все предупреждения пользователя {user} будут удалены')
-                cursor.execute(f'DELETE FROM warns WHERE user = {user.id}')
+                cursor.execute(sql.SQL('DELETE FROM warns WHERE "user" = {user_id}').format(
+                    user_id=sql.Literal(user.id)
+                ))
                 db.commit()
                 break
             elif confirm_response.author == ctx.message.author and confirm_response.component.label == 'Нет':
