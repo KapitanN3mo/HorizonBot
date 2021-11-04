@@ -8,6 +8,12 @@ from discord.ext import commands
 from discord_components import Button, ButtonStyle, Select
 
 
+class InExcept(Exception):
+    def __init__(self, context):
+        self.context = context
+
+
+
 class WarnModule(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -90,12 +96,16 @@ class WarnModule(commands.Cog):
     @commands.command()
     async def warns(self, ctx: commands.Context, user: str):
         if user == 'all':
-            cursor.execute(sql.SQL('SELECT id,user,owner,datetime,expiration FROM warns'))
+            cursor.execute(sql.SQL('SELECT id,"user",owner,datetime,expiration FROM warns'))
         else:
             user = user.replace('<', '').replace('>', '').replace('@', '').replace('!', '')
-            user = self.bot.get_user(int(user))
+            try:
+                user = int(user)
+            except ValueError:
+                raise InExcept(':exclamation:`Недопустимый пользователь`')
+            user = self.bot.get_user(user)
             if user is None:
-                raise Exception(':exclamation: `Такого пользователя не существует`')
+                raise InExcept(':exclamation:`Такого пользователя не существует`')
             cursor.execute(
                 sql.SQL('SELECT id,"user",owner,datetime,expiration FROM warns WHERE "user" = {user_id}').format(
                     user_id=sql.Literal(user.id)
@@ -124,22 +134,23 @@ class WarnModule(commands.Cog):
     @warns.error
     async def warns_error(self, ctx, error):
         if isinstance(error, commands.errors.MissingRequiredArgument):
-            await ctx.send(':exclamation: `Необходимо указать пользователя.`')
-        elif isinstance(error,Exception):
-            await ctx.send(error.__context__)
+            await ctx.send(':exclamation:`Необходимо указать пользователя.`')
+        elif isinstance(error.original, InExcept):
+            await ctx.send(error.original.context)
         else:
             await ctx.send(f':exclamation:`Произошла внутренняя ошибка : {error}`')
 
     @commands.has_permissions(kick_members=True)
     @commands.command()
     async def remove_warn(self, ctx: commands.Context, user: discord.User, warn_id: int):
-        cursor.execute(sql.SQL('SELECT user FROM warns WHERE id={warn_id}').format(
+        cursor.execute(sql.SQL('SELECT "user" FROM warns WHERE id={warn_id}').format(
             warn_id=sql.Literal(warn_id)
         ))
         res = cursor.fetchone()
         if res is None:
             await ctx.send(f':x: `Такого варна не существует`')
             return
+        print(res)
         if res[0] == user.id:
             cursor.execute(sql.SQL('DELETE FROM warns WHERE id = {warn_id}').format(
                 warn_id=sql.Literal(warn_id)
