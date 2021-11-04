@@ -1,6 +1,8 @@
-import sqlite3
+import os
+import psycopg2
 
-db = sqlite3.connect('database.db')
+DATABASE_URL = os.environ['DATABASE_URL']
+db = psycopg2.connect(DATABASE_URL, sslmode='require')
 cursor = db.cursor()
 cursor.execute('''CREATE TABLE IF NOT EXISTS server_users(
 id INTEGER PRIMARY KEY,
@@ -33,3 +35,4 @@ reason TEXT,
 datetime TEXT NOT NULL);
 ''')
 db.commit()
+
