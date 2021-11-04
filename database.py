@@ -26,7 +26,7 @@ last_voice_time TEXT
 );''')
 
 cursor.execute('''CREATE TABLE IF NOT EXISTS react_role(
-id INT PRIMARY KEY,
+id BIGINT PRIMARY KEY,
 info TEXT);''')
 cursor.execute('''CREATE TABLE IF NOT EXISTS warns(
 id SERIAL PRIMARY KEY,
