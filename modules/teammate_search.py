@@ -113,7 +113,7 @@ class GameReactModule(commands.Cog):
             role_info = data['info']
             cursor.execute(sql.SQL('INSERT INTO react_role(id,info) VALUES ({message_id},{role_info})').format(
                 message_id=sql.Literal(message),
-                info=sql.Literal(json.dumps(role_info))
+                role_info=sql.Literal(json.dumps(role_info))
             ))
         db.commit()
         self.load_role_data()
