@@ -61,11 +61,9 @@ class EventsModule(commands.Cog):
         else:
             old_count = result[0]
             old_xp = result[1]
-            print(old_xp,type(old_xp))
             old_count += 1
             xp_multiplier = int(config.get('Profile', 'xp_message_multiplier'))
             total_xp = int(xp_multiplier + old_xp)
-            print(total_xp)
             cursor.execute(sql.SQL(
                 '''UPDATE server_users SET message_count = {old_count},xp = {total_xp} WHERE id = {author_id}''').format(
                 old_count=sql.Literal(old_count),
