@@ -11,7 +11,6 @@ class CreateMultilineEmbedModule(commands.Cog):
     async def create_multiline_embed(self, ctx, channel: discord.TextChannel, *, data):
         if ctx.message.author.guild_permissions.administrator:
             data = data.replace('\n', '\\n').replace('\\', '')
-            print(data)
             data = json.loads(data)
             title = data['title']
             rows = data['rows']

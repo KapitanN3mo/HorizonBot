@@ -41,7 +41,6 @@ class GameReactModule(commands.Cog):
             emoji = convert_number_to_emoji(counter)
             text += f'{emoji}-{game_role.mention}\n'
             emojis[emoji] = game_role.id
-            print(game_role.name, emoji, counter)
             counter += 1
             if counter == 10:
                 embed = discord.Embed(title=title, colour=color, description=text)
@@ -94,7 +93,6 @@ class GameReactModule(commands.Cog):
     @commands.Cog.listener()
     async def on_raw_reaction_remove(self, payload: discord.RawReactionActionEvent):
         guild = discord.utils.get(self.bot.guilds, id=payload.guild_id)
-        print(guild.members)
         user = discord.utils.get(guild.members, id=payload.user_id)
         emoji = payload.emoji.name
         if user.id == self.bot.user.id:
@@ -118,7 +116,6 @@ class GameReactModule(commands.Cog):
         cursor.execute('SELECT * FROM react_role')
         role_data = cursor.fetchall()
         for msg in role_data:
-            print(msg)
             message_id = msg[0]
             info = json.loads(msg[1])
             msg_list.append({'message_id': message_id, 'role_info': info})

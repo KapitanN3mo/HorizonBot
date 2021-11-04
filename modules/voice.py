@@ -50,17 +50,18 @@ class VoiceModule(commands.Cog):
             else:
                 old_time = float(old_time[0])
             duration = (get_msk_datetime().replace(tzinfo=None) - entry_time).seconds
-            cursor.execute(f'UPDATE server_users SET in_voice_time = {old_time + duration} WHERE id = {member.id}')
-            db.commit()
-            xp_voice_multiplier = float(config.get('Profile', 'xp_voice_multiplier'))
-            voice_xp = math.ceil(duration / 60) * xp_voice_multiplier
-            cursor.execute(f'SELECT xp FROM server_users WHERE id = {member.id}')
-            print(member.id)
-            before_xp = cursor.fetchone()[0]
-            print(before_xp)
-            total_xp = before_xp + voice_xp
-            cursor.execute(f'UPDATE server_users SET xp = {total_xp} WHERE id = {member.id}')
-            db.commit()
+            if duration > int(config.get('Profile','voice_minimum_time')):
+                cursor.execute(f'UPDATE server_users SET in_voice_time = {old_time + duration} WHERE id = {member.id}')
+                db.commit()
+                xp_voice_multiplier = float(config.get('Profile', 'xp_voice_multiplier'))
+                voice_xp = math.ceil(duration / 60) * xp_voice_multiplier
+                cursor.execute(f'SELECT xp FROM server_users WHERE id = {member.id}')
+                before_xp = cursor.fetchone()[0]
+                total_xp = before_xp + voice_xp
+                cursor.execute(f'UPDATE server_users SET xp = {total_xp} WHERE id = {member.id}')
+                db.commit()
+            else:
+                voice_xp = 0
             cursor.execute(f'SELECT sys_info FROM server_users WHERE id = {member.id}')
             res = cursor.fetchone()
             if res is None:

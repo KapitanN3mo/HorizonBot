@@ -17,7 +17,6 @@ class KickModule(commands.Cog):
         else:
             reas = ''
             for word in reason:
-                print(word)
                 reas += (word + ' ')
         await user.kick(reason=reas)
         await ctx.send(f'`:white_check_mark: Пользователь {user.mention} выгнан!`')

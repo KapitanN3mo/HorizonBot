@@ -27,7 +27,6 @@ class MembersCommands(commands.Cog):
         sys_data['send_dm_voice'] = mode
         cursor.execute(f'UPDATE server_users SET sys_info = (?) WHERE id = {ctx.author.id}', (json.dumps(sys_data),))
         db.commit()
-        print('conf')
         await ctx.send(f':white_check_mark: `Настройка settings_voice_time_notify установлена на {mode}`')
 
     @settings_voice_time_notify.error

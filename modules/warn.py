@@ -15,7 +15,6 @@ class WarnModule(commands.Cog):
     async def auto_warn(self, channel: discord.TextChannel, user: discord.User, expiration: int, reason: str):
         cursor.execute('SELECT MAX(id) FROM warns')
         max_id = cursor.fetchone()
-        print(max_id)
         if max_id[0] is None:
             warn_id = 0
         else:
@@ -52,7 +51,7 @@ class WarnModule(commands.Cog):
     async def warn(self, ctx: commands.Context, user: discord.User, expiration: int, *, reason: str):
         cursor.execute('SELECT MAX(id) FROM warns')
         max_id = cursor.fetchone()
-        print(max_id)
+
         if max_id[0] is None:
             warn_id = 0
         else:
@@ -100,14 +99,12 @@ class WarnModule(commands.Cog):
             warn_id, user_name, owner, issue_time, expiration = warn
             expiration_time = (datetime.datetime.strptime(issue_time, datetime_format) + datetime.timedelta(
                 days=expiration) - get_msk_datetime().replace(tzinfo=None)).days
-            print(owner)
             owner = self.bot.get_user(owner)
             user_name = self.bot.get_user(user_name)
             if owner is not None:
                 owner = owner.name
             if user_name is not None:
                 user_name = user_name.name
-            print(owner)
             embed.add_field(name=f'Warn#{warn_id}',
                             value=f'Выдал {owner} -> {user_name} {issue_time} на {expiration} дней. Истечение через {expiration_time}:',
                             inline=False)
@@ -140,7 +137,6 @@ class WarnModule(commands.Cog):
         await ctx.send(f':question: Вы действительно хотите очистить варны пользователя {user}', components=comp)
         start_time = get_msk_datetime().replace(tzinfo=None)
         while (get_msk_datetime().replace(tzinfo=None) - start_time).seconds < 120:
-            print((get_msk_datetime().replace(tzinfo=None) - start_time).seconds)
             confirm_response = await self.bot.wait_for('button_click')
             if confirm_response.author == ctx.message.author and confirm_response.component.label == 'Да':
                 await confirm_response.respond(
