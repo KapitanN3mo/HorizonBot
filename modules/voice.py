@@ -33,8 +33,7 @@ class VoiceModule(commands.Cog):
                 await owner.move_to(private_channel)
 
         if before.channel is not None and after.channel is None:
-            entry_time = temp_file.get(str(member.id), 'entry')
-            entry_time = datetime.datetime.strptime(entry_time, '%Y-%m-%d-%H-%M')
+            entry_time = self.voice_entry[member.id]
             cursor.execute(sql.SQL('SELECT in_voice_time FROM server_users WHERE id = {member_id}').format(
                 member_id=sql.Literal(member.id)
             ))
