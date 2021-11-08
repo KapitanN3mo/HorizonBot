@@ -44,4 +44,9 @@ owner INT NOT NULL,
 reason TEXT,
 datetime TEXT NOT NULL);
 ''')
+cursor.execute('''CREATE TABLE IF NOT EXISTS error_rep(
+id SERIAL PRIMARY KEY,
+info TEXT NOT NULL,
+status INT NOT NULL,
+datetime TEXT NOT NULL)''')
 db.commit()

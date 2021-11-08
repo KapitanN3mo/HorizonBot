@@ -3,6 +3,10 @@ import logging
 import discord
 from discord.ext import commands
 import os
+from componets import get_msk_datetime, get_str_msk_datetime
+from database import *
+
+error_state = {1: 'Отправлено', 2: 'Принято', 3: 'Исправлено'}
 
 
 class ServiceModule(commands.Cog):
@@ -40,6 +44,19 @@ class ServiceModule(commands.Cog):
 temp.ini - {temp_size} KB
 reaction_roles.txt - {msg_size} KB```'''
         await ctx.send(message)
+
+    @commands.command()
+    async def error_report(self, *, info):
+        user = self.bot.get_user(357283670047850497)
+        error_emb = discord.Embed(title='Сообщение о ошибке', colour=discord.Colour.red(), description=info)
+        await user.send(error_emb)
+        error_emb.add_field(name='Статус', value=error_state[1])
+        error_emb.set_footer(text=get_str_msk_datetime())
+        cursor.execute(sql.SQL('INSERT INTO error_rep(info,status,datetime) VALUE({info},{status},{datetime})').format(
+            info=sql.Literal(info),
+            status=sql.Literal(1),
+            datetime=sql.Literal(get_str_msk_datetime())
+        ))
 
 
 def setup(bot):
