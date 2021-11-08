@@ -46,7 +46,7 @@ reaction_roles.txt - {msg_size} KB```'''
         await ctx.send(message)
 
     @commands.command()
-    async def error_report(self, *, info):
+    async def error_report(self,ctx, *, info):
         user = self.bot.get_user(357283670047850497)
         error_emb = discord.Embed(title='Сообщение о ошибке', colour=discord.Colour.red(), description=info)
         await user.send(error_emb)
@@ -57,6 +57,8 @@ reaction_roles.txt - {msg_size} KB```'''
             status=sql.Literal(1),
             datetime=sql.Literal(get_str_msk_datetime())
         ))
+        db.commit()
+        await ctx.send(embed=error_emb)
 
 
 def setup(bot):
