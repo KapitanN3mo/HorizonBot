@@ -9,6 +9,9 @@ from componets import config
 
 
 class VoiceModule(commands.Cog):
+    voice_entry = {}
+    private_channels = {}
+
     def __init__(self, bot):
         self.bot = bot
 
@@ -16,17 +19,9 @@ class VoiceModule(commands.Cog):
     async def on_voice_state_update(self, member: discord.User, before: discord.VoiceState,
                                     after: discord.VoiceState):
         if before.channel is None and after.channel is not None:
-            try:
-                temp_file.remove_section(str(member.id))
-            except Exception as ex:
-                print(ex)
-            temp_file.add_section(str(member.id))
-            temp_file.set(str(member.id), 'entry',
-                          get_str_msk_datetime())
-            temp_file.commit()
-            print(after.channel.id)
+            self.voice_entry[member.id] = get_msk_datetime()
             if after.channel.id == int(config.get('Global', 'private_voice_channel')):
-                print('create private')
+                print(f'Create private from {member.name}')
                 category = after.channel.category
                 owner = discord.utils.get(category.guild.members, id=member.id)
                 private_channel = await category.create_voice_channel(name=owner.name,
@@ -34,10 +29,7 @@ class VoiceModule(commands.Cog):
                 overwrite = discord.PermissionOverwrite()
                 overwrite.manage_channels = True
                 await private_channel.set_permissions(owner, overwrite=overwrite)
-                if not temp_file.has_section('private'):
-                    temp_file.add_section('private')
-                temp_file.set('private', str(private_channel.id), str(owner.id))
-                temp_file.commit()
+                self.private_channels[private_channel.id] = owner.id
                 await owner.move_to(private_channel)
 
         if before.channel is not None and after.channel is None:
@@ -87,17 +79,14 @@ class VoiceModule(commands.Cog):
                 minutes = (duration - (hours * 3600)) // 60
                 await member.send(
                     f'Вы общались {hours} часов {minutes} минут. Начислен опыт: {voice_xp} очков')
-            if temp_file.has_section('private'):
-                print('check_private')
-                if temp_file.has_option('private', str(before.channel.id)):
-                    print('check_id')
-                    clients = before.channel.members
-                    if not clients:
-                        print('remove_private')
-                        await before.channel.delete(reason='Автоудаление пустого приватного канала')
+            if before.channel.id in self.private_channels:
+                clients = before.channel.members
+                if not clients:
+                    print(f'Remove empty private channel. Owner {self.private_channels[before.channel.id]}')
+                    await before.channel.delete(reason='Автоудаление пустого приватного канала')
         if before.channel is not None and after.channel is not None:
             if after.channel.id == int(config.get('Global', 'private_voice_channel')):
-                print('create private')
+                print(f'Create private from {member.name}')
                 category = after.channel.category
                 owner = discord.utils.get(category.guild.members, id=member.id)
                 private_channel = await category.create_voice_channel(name=owner.name,
@@ -105,17 +94,13 @@ class VoiceModule(commands.Cog):
                 overwrite = discord.PermissionOverwrite()
                 overwrite.manage_channels = True
                 await private_channel.set_permissions(owner, overwrite=overwrite)
-                if not temp_file.has_section('private'):
-                    temp_file.add_section('private')
-                temp_file.set('private', str(private_channel.id), str(owner.id))
-                temp_file.commit()
+                self.private_channels[private_channel.id] = owner.id
                 await owner.move_to(private_channel)
-            if temp_file.has_section('private'):
-                if temp_file.has_option('private', str(before.channel.id)):
-                    clients = before.channel.members
-                    if not clients:
-                        print('remove_private')
-                        await before.channel.delete(reason='Автоудаление пустого приватного канала')
+            if before.channel.id in self.private_channels:
+                clients = before.channel.members
+                if not clients:
+                    print(f'Remove empty private channel. Owner {self.private_channels[before.channel.id]}')
+                    await before.channel.delete(reason='Автоудаление пустого приватного канала')
 
 
 def setup(bot):
