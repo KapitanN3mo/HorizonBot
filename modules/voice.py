@@ -81,7 +81,9 @@ class VoiceModule(commands.Cog):
             if before.channel.id in self.private_channels:
                 clients = before.channel.members
                 if not clients:
-                    print(f'Remove empty private channel. Owner {self.private_channels[before.channel.id]}')
+                    owner_name = discord.utils.get(before.channel.guild.members,
+                                                   id=self.private_channels[before.channel.id])
+                    print(f'Remove empty private channel. Owner {owner_name}')
                     await before.channel.delete(reason='Автоудаление пустого приватного канала')
         if before.channel is not None and after.channel is not None:
             if after.channel.id == int(config.get('Global', 'private_voice_channel')):
