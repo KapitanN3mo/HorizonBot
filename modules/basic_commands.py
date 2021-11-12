@@ -9,7 +9,8 @@ class BasicCommands(commands.Cog):
 
     @commands.has_role(admin_role)
     @commands.command()
-    async def send(self, channel: discord.TextChannel, message: str):
+    async def send(self,ctx, channel: discord.TextChannel, *, message: str):
+        print(message)
         await channel.send(content=message)
 
 
