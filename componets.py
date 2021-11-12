@@ -57,3 +57,4 @@ class ConfigWithCommit():
 config = ConfigWithCommit('configuration.ini')
 temp_file = ConfigWithCommit('temp.ini')
 datetime_format = '%Y-%m-%d-%H-%M'
+admin_role = int(config.get('Global', 'admin_role'))
