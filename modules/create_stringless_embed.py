@@ -19,6 +19,7 @@ class CreateStringlessEmbedModule(commands.Cog):
             title = data['title']
             text = data['text']
             color = data['color']
+            out_text = data['out_text']
             if color == 'random':
                 color = discord.Colour.random()
             else:
@@ -38,7 +39,7 @@ class CreateStringlessEmbedModule(commands.Cog):
                 embed.set_footer(text=footer)
             if show_author:
                 embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar_url)
-            await channel.send(embed=embed)
+            await channel.send(content=out_text,embed=embed)
         else:
             raise commands.errors.MissingPermissions('administrator')
 
