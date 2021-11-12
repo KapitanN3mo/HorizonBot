@@ -3,8 +3,12 @@ import logging
 import discord
 from discord.ext import commands
 import os
-from componets import get_msk_datetime, get_str_msk_datetime
+
+import api.api
+from componets import get_msk_datetime, get_str_msk_datetime, admin_role
 from database import *
+from api.api import auth_tokens
+import secrets
 
 error_state = {1: 'Отправлено', 2: 'Принято', 3: 'Исправлено'}
 
@@ -29,6 +33,13 @@ class ServiceModule(commands.Cog):
 
         await ctx.send('```Файл справки не найден для команд:\n' + '\n'.join(comm_list) + '```')
 
+    @commands.has_role(admin_role)
+    @commands.command()
+    async def api_token(self, ctx):
+        token = secrets.token_hex(32)
+        api.api.auth_tokens[token] = ctx.author.id
+        await ctx.author.send(f'`Ваш api-токен: {token}`')
+
     @commands.has_role(901491325969522768)
     @commands.command()
     async def info(self, ctx):
@@ -46,7 +57,7 @@ reaction_roles.txt - {msg_size} KB```'''
         await ctx.send(message)
 
     @commands.command()
-    async def error_report(self,ctx, *, info):
+    async def error_report(self, ctx, *, info):
         user = self.bot.get_user(357283670047850497)
         error_emb = discord.Embed(title='Сообщение о ошибке', colour=discord.Colour.red(), description=info)
         await user.send(error_emb)
