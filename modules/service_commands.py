@@ -4,10 +4,10 @@ import discord
 from discord.ext import commands
 import os
 
-import api.api
+# import api.api
 from componets import get_msk_datetime, get_str_msk_datetime, admin_role
 from database import *
-from api.api import auth_tokens
+# from api.api import auth_tokens
 import secrets
 
 error_state = {1: 'Отправлено', 2: 'Принято', 3: 'Исправлено'}
@@ -33,12 +33,12 @@ class ServiceModule(commands.Cog):
 
         await ctx.send('```Файл справки не найден для команд:\n' + '\n'.join(comm_list) + '```')
 
-    @commands.has_role(admin_role)
-    @commands.command()
-    async def api_token(self, ctx):
-        token = secrets.token_hex(32)
-        api.api.auth_tokens[token] = ctx.author.id
-        await ctx.author.send(f'`Ваш api-токен: {token}`')
+    # @commands.has_role(admin_role)
+    # @commands.command()
+    # async def api_token(self, ctx):
+    #     token = secrets.token_hex(32)
+    #     api.api.auth_tokens[token] = ctx.author.id
+    #     await ctx.author.send(f'`Ваш api-токен: {token}`')
 
     @commands.has_role(901491325969522768)
     @commands.command()
