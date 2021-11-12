@@ -1,13 +1,11 @@
-import json
-import os
-
-import discord
 from discord.ext import commands
-from componets import config, convert_number_to_emoji
+import json
+import discord
+from componets import config, admin_role, convert_number_to_emoji
 from database import *
 
 
-class GameReactModule(commands.Cog):
+class RoleReactModule(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.add_reaction_listener = None
@@ -15,34 +13,38 @@ class GameReactModule(commands.Cog):
         self.role_data = None
         self.load_role_data()
 
-    admin_role = int(config.get('Global', 'admin_role'))
-
     @commands.has_role(admin_role)
     @commands.command()
     async def create_role_embed(self, ctx: commands.Context, channel: discord.TextChannel, *,
                                 data: str):
-        emb_data = json.loads(data)
+        # {"title","color","separate","roles":[{"name","emoji","color"},{}]}
+        role_data = json.loads(data)
         guild = ctx.author.guild
-        title = emb_data['title']
-        color = int(emb_data['color'], 16)
-        games = sorted(emb_data['games'])
+        title = role_data['title']
+        color = int(role_data['color'], 16)
+        roles = sorted(role_data['roles'])
+        separate = int(role_data['separate'])
         text = ''
         counter = 1
         save_data = []
         emojis = {}
-        for game in games:
-            game = game.replace('\\', '')
-            check_role = discord.utils.get(guild.roles, name=game)
+        for role in roles:
+            role_name = role['name'].replace('\\', '')
+            role_color = role['color']#int(role['color'], 16)
+            try:
+                role_emoji = role['emoji']
+            except KeyError:
+                role_emoji = convert_number_to_emoji(counter)
+            check_role = discord.utils.get(guild.roles, name=role_name)
             if check_role is None:
-                game_role = await guild.create_role(name=game, reason=f'Автоматичская роль игры {game}',
-                                                    colour=discord.Colour.default(), mentionable=True)
+                ds_role = await guild.create_role(name=role_name, reason=f'Создана для выдачи по эмодзи',
+                                                  colour=role_color, mentionable=True)
             else:
-                game_role = check_role
-            emoji = convert_number_to_emoji(counter)
-            text += f'{emoji}-{game_role.mention}\n'
-            emojis[emoji] = game_role.id
+                ds_role = check_role
+            text += f'{role_emoji}-{ds_role.mention}\n'
+            emojis[role_emoji] = ds_role.id
             counter += 1
-            if counter == 10:
+            if counter == separate:
                 embed = discord.Embed(title=title, colour=color, description=text)
                 msg = await channel.send(embed=embed)
                 for em in emojis:
@@ -130,4 +132,4 @@ class GameReactModule(commands.Cog):
 
 
 def setup(bot):
-    bot.add_cog(GameReactModule(bot))
+    bot.add_cog(RoleReactModule(bot))
