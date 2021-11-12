@@ -13,7 +13,6 @@ class InExcept(Exception):
         self.context = context
 
 
-
 class WarnModule(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -92,24 +91,35 @@ class WarnModule(commands.Cog):
             except discord.errors.Forbidden:
                 await ctx.send(f':sob: `Недостаточно прав! Не могу забанить {user.name}`')
 
-    @commands.has_permissions(kick_members=True)
     @commands.command()
-    async def warns(self, ctx: commands.Context, user: str):
-        if user == 'all':
-            cursor.execute(sql.SQL('SELECT id,"user",owner,datetime,expiration FROM warns'))
+    async def warns(self, ctx: commands.Context, user: str = ''):
+        member = discord.utils.get(ctx.guild.members, id=ctx.author.id)
+        permit = member.guild_permissions.kick_members
+        if permit:
+            if user == 'all':
+
+                cursor.execute(sql.SQL('SELECT id,"user",owner,datetime,expiration FROM warns'))
+            else:
+                user = user.replace('<', '').replace('>', '').replace('@', '').replace('!', '')
+                try:
+                    user = int(user)
+                except ValueError:
+                    raise InExcept(':exclamation:`Недопустимый пользователь`')
+                user = self.bot.get_user(user)
+                if user is None:
+                    raise InExcept(':exclamation:`Такого пользователя не существует`')
+                cursor.execute(
+                    sql.SQL('SELECT id,"user",owner,datetime,expiration FROM warns WHERE "user" = {user_id}').format(
+                        user_id=sql.Literal(user.id)
+                    ))
         else:
-            user = user.replace('<', '').replace('>', '').replace('@', '').replace('!', '')
-            try:
-                user = int(user)
-            except ValueError:
-                raise InExcept(':exclamation:`Недопустимый пользователь`')
-            user = self.bot.get_user(user)
-            if user is None:
-                raise InExcept(':exclamation:`Такого пользователя не существует`')
-            cursor.execute(
-                sql.SQL('SELECT id,"user",owner,datetime,expiration FROM warns WHERE "user" = {user_id}').format(
-                    user_id=sql.Literal(user.id)
-                ))
+            if user == '':
+                cursor.execute(
+                    sql.SQL('SELECT id,"user",owner,datetime,expiration FROM warns WHERE "user" = {user_id}').format(
+                        user_id=sql.Literal(ctx.author.id)
+                    ))
+            else:
+                raise InExcept(':exclamation:`Вы можете посмортеть только свои варны, для этого просто используйте {warns} без аргументов`')
         result = cursor.fetchall()
         print(result)
         if not result:
