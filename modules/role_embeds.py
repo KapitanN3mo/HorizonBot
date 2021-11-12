@@ -19,8 +19,8 @@ class GameReactModule(commands.Cog):
 
     @commands.has_role(admin_role)
     @commands.command()
-    async def game_role_embed(self, ctx: commands.Context, channel: discord.TextChannel, *,
-                              data: str):
+    async def create_role_embed(self, ctx: commands.Context, channel: discord.TextChannel, *,
+                                data: str):
         emb_data = json.loads(data)
         guild = ctx.author.guild
         title = emb_data['title']
