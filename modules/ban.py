@@ -2,12 +2,10 @@ import json
 
 import discord
 from discord.ext import commands
-from log_service import Logging
 from database import cursor, db
 from componets import get_str_msk_datetime, get_msk_datetime
 from discord_components import Button, ButtonStyle
 
-logger = Logging('ban')
 
 
 class BanModule(commands.Cog):
@@ -23,10 +21,6 @@ class BanModule(commands.Cog):
         if reason == '':
             reason = 'Причина не указана'
         await user.ban(reason=reason)
-        # cursor.execute(
-        #     f'INSERT INTO bans(user,user_name,owner,reason,datetime) VALUES({user.id},"{user.display_name}",{ctx.author.id},"{reason}","{get_str_msk_datetime()}")')
-        logger.audit(f'{ctx.author} забанил {user} по причине {reason}')
-        # db.commit()
         await ctx.send(f':white_check_mark: `Пользователь {user.display_name} забанен!`')
 
     @ban.error
