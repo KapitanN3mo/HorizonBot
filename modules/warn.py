@@ -119,7 +119,8 @@ class WarnModule(commands.Cog):
                         user_id=sql.Literal(ctx.author.id)
                     ))
             else:
-                raise InExcept(':exclamation:`Вы можете посмортеть только свои варны, для этого просто используйте {warns} без аргументов`')
+                raise InExcept(
+                    ':exclamation:`Вы можете посмортеть только свои варны, для этого просто используйте {warns} без аргументов`')
         result = cursor.fetchall()
         print(result)
         if not result:
@@ -167,6 +168,15 @@ class WarnModule(commands.Cog):
             ))
             db.commit()
             await ctx.send(f':white_check_mark: `Варн №{warn_id} был удалён! Пользователь {user}`')
+
+    @remove_warn.error
+    async def remove_warn_error(self, ctx, error):
+        if isinstance(error, commands.errors.MissingRequiredArgument):
+            await ctx.send(':exclamation:`Использование: remove_warn {user} {warn id}.`')
+        elif isinstance(error.original, InExcept):
+            await ctx.send(error.original.context)
+        else:
+            await ctx.send(f':exclamation:`Произошла внутренняя ошибка : {error}`')
 
     @commands.has_permissions(kick_members=True)
     @commands.command()

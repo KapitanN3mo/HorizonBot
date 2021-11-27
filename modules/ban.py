@@ -7,7 +7,6 @@ from componets import get_str_msk_datetime, get_msk_datetime
 from discord_components import Button, ButtonStyle
 
 
-
 class BanModule(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot

@@ -52,7 +52,7 @@ class VoiceModule(commands.Cog):
                     ))
                 db.commit()
                 xp_voice_multiplier = float(config.get('Profile', 'xp_voice_multiplier'))
-                voice_xp = math.ceil(duration / 60) * xp_voice_multiplier
+                voice_xp = (duration // 60) * xp_voice_multiplier
                 cursor.execute(sql.SQL('SELECT xp FROM server_users WHERE id = {member_id}').format(
                     member_id=sql.Literal(member.id)
                 ))
