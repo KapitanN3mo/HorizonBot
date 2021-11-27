@@ -2,9 +2,10 @@ import math
 import discord
 from discord.ext import commands
 from database import *
-from componets import config
+from componets import config,datetime_format
 import json
 from modules.events import EventsModule
+import datetime
 
 
 class ProfileModule(commands.Cog):
@@ -26,15 +27,25 @@ class ProfileModule(commands.Cog):
             await ctx.send('Это ваше первое сообщение! Ваш профиль создан!')
 
         else:
+            member = discord.utils.get(ctx.guild.members, id=user.id)
+            cursor.execute(
+                sql.SQL('SELECT COUNT(*) FROM warns WHERE "user" = {user}').format(user=sql.Literal(user.id)))
+            warn_result = cursor.fetchone()
+            print(warn_result)
+            warn_result = warn_result[0]
             message_count, xp, in_voice_time, status, warns, last_voice_time = result
-            embed = discord.Embed(title=f'Профиль пользователя {user.name}', colour=discord.Colour.random())
+            embed = discord.Embed(title=' ', colour=member.colour, description=user.mention)
             embed.add_field(name='Количество сообщений', value=message_count)
             embed.add_field(name='Очки опыта', value=xp)
-            embed.add_field(name='Время в голосовом канале', value=f'{math.ceil(in_voice_time / 60)} минут')
+            embed.add_field(name='Время в голосовом канале', value=f'{in_voice_time // 60} минут')
+            join_datetime = member.joined_at
+            embed.add_field(name='Появился на сервере', value=f'{join_datetime.strftime(datetime_format)} ({(datetime.datetime.now() - join_datetime).days} дней назад)')
+            embed.add_field(name='Предупреждения', value=f'{warn_result}/3')
+            embed.set_author(name=user.name, icon_url=user.avatar_url)
+            embed.set_thumbnail(url=user.avatar_url)
             await ctx.send(embed=embed)
 
     async def update_on_message(self, message: discord.Message):
-        print('register_message')
         cursor.execute(sql.SQL('SELECT message_count,xp FROM server_users WHERE "id" = {us_id}').format(
             us_id=sql.Literal(message.author.id)))
         result = cursor.fetchone()
