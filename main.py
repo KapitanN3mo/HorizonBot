@@ -3,7 +3,7 @@ import discord
 from discord_components import DiscordComponents
 import os
 from componets import config
-from api import api
+# from api import api
 
 intents = discord.Intents().all()
 intents.members = True
@@ -16,5 +16,5 @@ for module in os.listdir('modules'):
         bot.load_extension(f'modules.{module.replace(".py", "")}')
 token = config.get('Global', 'token')
 
-api.launch_api_server(bot)
+# api.launch_api_server(bot)
 bot.run(token)
