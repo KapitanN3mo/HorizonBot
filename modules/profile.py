@@ -2,7 +2,7 @@ import math
 import discord
 from discord.ext import commands
 from database import *
-from componets import config,datetime_format
+from componets import config, datetime_format
 import json
 from modules.events import EventsModule
 import datetime
@@ -13,6 +13,7 @@ class ProfileModule(commands.Cog):
         self.bot = bot
         self.event_hook = EventsModule(self.bot)
         self.event_hook.subscribe('on_message', self.update_on_message)
+        print('subscribe')
 
     @commands.command()
     async def profile(self, ctx: commands.Context, user: discord.User or None = None):
@@ -39,11 +40,22 @@ class ProfileModule(commands.Cog):
             embed.add_field(name='Очки опыта', value=xp)
             embed.add_field(name='Время в голосовом канале', value=f'{in_voice_time // 60} минут')
             join_datetime = member.joined_at
-            embed.add_field(name='Появился на сервере', value=f'{join_datetime.strftime(datetime_format)} ({(datetime.datetime.now() - join_datetime).days} дней назад)')
+            embed.add_field(name='Появился на сервере',
+                            value=f'{join_datetime.strftime(datetime_format)} ({(datetime.datetime.now() - join_datetime).days} дней назад)')
             embed.add_field(name='Предупреждения', value=f'{warn_result}/3')
             embed.set_author(name=user.name, icon_url=user.avatar_url)
             embed.set_thumbnail(url=user.avatar_url)
             await ctx.send(embed=embed)
+
+    # @commands.command()
+    # async def remove_xp(self, ctx, user: discord.User, count: int):
+    #     cursor.execute(sql.SQL('SELECT xp FROM server_users WHERE id = {us_id}').format(us_id=user.id))
+    #     result = cursor.fetchone()
+    #     if result is None
+    #
+#
+    # async def add_xp(self, ctx, user: discord.User, count: int):
+    #     pass
 
     async def update_on_message(self, message: discord.Message):
         cursor.execute(sql.SQL('SELECT message_count,xp FROM server_users WHERE "id" = {us_id}').format(
