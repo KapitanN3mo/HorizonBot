@@ -3,6 +3,7 @@ import discord
 from discord_components import DiscordComponents
 import os
 from componets import config
+
 # from api import api
 
 intents = discord.Intents().all()
@@ -13,7 +14,10 @@ DiscordComponents(bot=bot)
 
 for module in os.listdir('modules'):
     if module.endswith('.py'):
-        bot.load_extension(f'modules.{module.replace(".py", "")}')
+        try:
+            bot.load_extension(f'modules.{module.replace(".py", "")}')
+        except Exception as ex:
+            print(ex)
 token = config.get('Global', 'token')
 
 # api.launch_api_server(bot)
