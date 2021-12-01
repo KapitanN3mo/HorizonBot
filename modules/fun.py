@@ -12,13 +12,14 @@ class FunCommands(commands.Cog):
         self.bot = bot
 
     @commands.command()
-    async def fry(self, ctx: commands.Context, user: discord.User):
+    async def fry(self, ctx: commands.Context, user: discord.User, piece_count=10):
         if user == self.bot.user:
             await ctx.send('Не-не-не, я не вкусный! 🤖')
             return
         start_time = datetime.datetime.now()
-        pieces_count = 10
-        embed = discord.Embed(title=f'🔥 Жарим {user.name}', description="**Прогресс отжаривания:**\n" + "<" + "=" + ">",
+        current_pieces_count = piece_count
+        embed = discord.Embed(title=f'🔥 Жарим {user.name}',
+                              description="**Прогресс отжаривания:**\n" + "<" + "=" + ">",
                               colour=0xFF8F00)
         msg = await ctx.send(embed=embed)
         for i in range(1, 11):
@@ -29,12 +30,12 @@ class FunCommands(commands.Cog):
             await asyncio.sleep(1)
         embed = discord.Embed(title=f'🔥 Жарим {user.name}',
                               description="**Прогресс отжаривания:**\n" + f"Успешно отжарено! "
-                                                                          f"Хотите кусочек? Осталось {pieces_count} 🍗",
+                                                                          f"Хотите кусочек? Осталось {current_pieces_count} 🍗",
                               colour=0xFF8F00)
         await msg.edit(embed=embed)
         await msg.add_reaction('🍗')
         mes_id = msg.id
-        while pieces_count > 0:
+        while current_pieces_count > 0:
             msg = await ctx.fetch_message(mes_id)
             if ((datetime.datetime.now() - start_time).seconds / 60) >= 10:
                 await msg.edit(embed=discord.Embed(title=f'🔥 Жарим {user.name}',
@@ -56,10 +57,10 @@ class FunCommands(commands.Cog):
                                                                f"Всё украли! Расходимся! 😡",
                                                    colour=0xFF8F00))
                 return
-            pieces_count = 11 - react_count
+            current_pieces_count = piece_count + 1 - react_count
             embed = discord.Embed(title=f'🔥 Жарим {user.name}',
                                   description="**Прогресс отжаривания:**\n" +
-                                              f"Хотите кусочек? Осталось {pieces_count} 🍗 ?",
+                                              f"Хотите кусочек? Осталось {current_pieces_count} 🍗 ?",
                                   colour=0xFF8F00)
             await msg.edit(embed=embed)
             await asyncio.sleep(1)
