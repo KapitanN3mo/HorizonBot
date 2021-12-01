@@ -13,6 +13,8 @@ class FunCommands(commands.Cog):
 
     @commands.command()
     async def fry(self, ctx: commands.Context, user: discord.User, piece_count=10):
+        if user.id == ctx.author.id:
+            await ctx.send('Оооо да вы, месье, ценитель канибализма! 🧐 ')
         if user == self.bot.user:
             await ctx.send('Не-не-не, я не вкусный! 🤖')
             return
