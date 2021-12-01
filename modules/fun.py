@@ -13,6 +13,9 @@ class FunCommands(commands.Cog):
 
     @commands.command()
     async def fry(self, ctx: commands.Context, user: discord.User):
+        if user == self.bot.user:
+            await ctx.send('Не-не-не, я не вкусный! 🤖')
+            return
         start_time = datetime.datetime.now()
         pieces_count = 10
         embed = discord.Embed(title=f'🔥 Жарим {user.name}', description="**Прогресс отжаривания:**\n" + "<" + "=" + ">",
