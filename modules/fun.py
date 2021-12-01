@@ -69,10 +69,10 @@ class FunCommands(commands.Cog):
             if current_pieces_count <= 0:
                 break
         msg = await ctx.fetch_message(mes_id)
-        await msg.edit(title=f'🔥 Жарим {user.name}',
-                       description="**Прогресс отжаривания:**\n" +
-                                   f"Всего сожрали!",
-                       colour=0xFF8F00)
+        await msg.edit(embed=discord.Embed(title=f'🔥 Жарим {user.name}',
+                                           description="**Прогресс отжаривания:**\n" +
+                                                       f"Всего сожрали!",
+                                           colour=0xFF8F00))
 
     @commands.command()
     async def kill(self, ctx, user: discord.User, state, channel: int):
