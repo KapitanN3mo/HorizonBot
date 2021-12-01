@@ -14,7 +14,7 @@ class FunCommands(commands.Cog):
     @commands.command()
     async def fry(self, ctx: commands.Context, user: discord.User, piece_count=10):
         if user.id == ctx.author.id:
-            await ctx.send('Оооо да вы, месье, ценитель канибализма! 🧐 ')
+            await ctx.send('Оооо да вы, месье, ценитель каннибализма! 🧐 ')
         if user == self.bot.user:
             await ctx.send('Не-не-не, я не вкусный! 🤖')
             return
@@ -37,7 +37,7 @@ class FunCommands(commands.Cog):
         await msg.edit(embed=embed)
         await msg.add_reaction('🍗')
         mes_id = msg.id
-        while current_pieces_count > 0:
+        while current_pieces_count - 1 > 0:
             msg = await ctx.fetch_message(mes_id)
             if ((datetime.datetime.now() - start_time).seconds / 60) >= 10:
                 await msg.edit(embed=discord.Embed(title=f'🔥 Жарим {user.name}',
