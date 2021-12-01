@@ -5,11 +5,22 @@ import os
 
 
 class HelpModule(commands.Cog):
-    def __init__(self, bot):
+    def __init__(self, bot: commands.Bot):
         self.bot = bot
 
     @commands.command()
-    async def help(self,ctx, command_name=None):
+    async def help(self, ctx, command_name=None):
+        help_embed = discord.Embed(title=' ', colour=0x00FF80)
+        functions = [{'use': 'h.fry {жертва} {на сколько кусочков нарезать}',
+                      'desc': '**Хотите кого-то зажарить? Приятного аппетита!**'}]
+        for command in functions:
+            help_embed.add_field(name=command['desc'], value=command['use'])
+        help_embed.set_author(name=self.bot.user.name, icon_url=self.bot.user.avatar_url)
+        await ctx.send(embed=help_embed)
+
+    @commands.has_guild_permissions(administrator=True)
+    @commands.command()
+    async def adm_help(self, ctx, command_name=None):
         if command_name is not None:
             help_texts = os.listdir('help_texts')
             if f'{command_name}.txt' in help_texts:
