@@ -33,7 +33,7 @@ class FunCommands(commands.Cog):
         while pieces_count > 0:
             msg = await ctx.fetch_message(mes_id)
             emojis = msg.reactions
-            #print(emojis)
+            # print(emojis)
             react_count = None
             for emoji in emojis:
                 if emoji.emoji == '🍗':
@@ -63,6 +63,10 @@ class FunCommands(commands.Cog):
                                       colour=0xFF8F00)
                 await msg.edit(embed=embed)
             await asyncio.sleep(1)
+        await msg.edit(title=f'Жарим {user.name}',
+                       description="**Прогресс отжаривания:**\n" + f"Успешно отжарено! "
+                                                                   f"Всего сожрали!",
+                       colour=0xFF8F00)
 
     @commands.command()
     async def kill(self, ctx, user: discord.User, state, channel: int):
