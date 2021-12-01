@@ -29,6 +29,7 @@ class FunCommands(commands.Cog):
             else:
                 if user.id in self._tasks:
                     self._tasks[user.id].cancel()
+                    del self._tasks[user.id]
                     await ctx.send('Пусть живёт')
 
     async def _kb(self, ctx: commands.Context, user: discord.User, m_ch_id):
