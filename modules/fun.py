@@ -47,21 +47,17 @@ class FunCommands(commands.Cog):
                                                    colour=0xFF8F00))
                 return
             pieces_count = 11 - react_count
-            if pieces_count == old_pieces_count:
-                continue
-            else:
-                if pieces_count in [1]:
-                    piece_str = 'кусочек'
-                elif pieces_count in [2, 3, 4]:
-                    piece_str = 'кусочка'
-                elif pieces_count in [5, 6, 7, 8, 9, 10]:
-                    piece_str = 'кусочков'
-
-                embed = discord.Embed(title=f'Жарим {user.name}',
-                                      description="**Прогресс отжаривания:**\n" + f"Успешно отжарено! "
-                                                                                  f"Хотите кусочек? Осталось {pieces_count} {piece_str}?",
-                                      colour=0xFF8F00)
-                await msg.edit(embed=embed)
+            if pieces_count in [1]:
+                piece_str = 'кусочек'
+            elif pieces_count in [2, 3, 4]:
+                piece_str = 'кусочка'
+            elif pieces_count in [5, 6, 7, 8, 9, 10]:
+                piece_str = 'кусочков'
+            embed = discord.Embed(title=f'Жарим {user.name}',
+                                  description="**Прогресс отжаривания:**\n" + f"Успешно отжарено! "
+                                                                              f"Хотите кусочек? Осталось {pieces_count} {piece_str}?",
+                                  colour=0xFF8F00)
+            await msg.edit(embed=embed)
             await asyncio.sleep(1)
         await msg.edit(title=f'Жарим {user.name}',
                        description="**Прогресс отжаривания:**\n" + f"Успешно отжарено! "
