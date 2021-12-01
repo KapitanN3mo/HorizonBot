@@ -37,7 +37,7 @@ class FunCommands(commands.Cog):
         await msg.edit(embed=embed)
         await msg.add_reaction('🍗')
         mes_id = msg.id
-        while current_pieces_count > 0:
+        while True:
             msg = await ctx.fetch_message(mes_id)
             if ((datetime.datetime.now() - start_time).seconds / 60) >= 10:
                 await msg.edit(embed=discord.Embed(title=f'🔥 Жарим {user.name}',
@@ -66,6 +66,8 @@ class FunCommands(commands.Cog):
                                   colour=0xFF8F00)
             await msg.edit(embed=embed)
             await asyncio.sleep(1)
+            if current_pieces_count <= 0:
+                break
         msg = await ctx.fetch_message(mes_id)
         await msg.edit(title=f'🔥 Жарим {user.name}',
                        description="**Прогресс отжаривания:**\n" +
