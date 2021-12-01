@@ -1,4 +1,5 @@
 import asyncio
+import datetime
 
 import discord
 from discord.ext import commands
@@ -12,26 +13,32 @@ class FunCommands(commands.Cog):
 
     @commands.command()
     async def fry(self, ctx: commands.Context, user: discord.User):
+        start_time = datetime.datetime.now()
         pieces_count = 10
-        old_pieces_count = 10
-        embed = discord.Embed(title=f'Жарим {user.name}', description="**Прогресс отжаривания:**\n" + "<" + "=" + ">",
+        embed = discord.Embed(title=f'🔥 Жарим {user.name}', description="**Прогресс отжаривания:**\n" + "<" + "=" + ">",
                               colour=0xFF8F00)
         msg = await ctx.send(embed=embed)
         for i in range(1, 11):
-            embed = discord.Embed(title=f'Жарим {user.name}',
+            embed = discord.Embed(title=f'🔥 Жарим {user.name}',
                                   description="**Прогресс отжаривания:**\n" + "<" + "=" * i + ">" + str(i * 10) + "%",
                                   colour=0xFF8F00)
             await msg.edit(embed=embed)
             await asyncio.sleep(1)
-        embed = discord.Embed(title=f'Жарим {user.name}',
+        embed = discord.Embed(title=f'🔥 Жарим {user.name}',
                               description="**Прогресс отжаривания:**\n" + f"Успешно отжарено! "
-                                                                          f"Хотите кусочек? Осталось {pieces_count} кусочек?",
+                                                                          f"Хотите кусочек? Осталось {pieces_count} 🍗",
                               colour=0xFF8F00)
         await msg.edit(embed=embed)
         await msg.add_reaction('🍗')
         mes_id = msg.id
         while pieces_count > 0:
             msg = await ctx.fetch_message(mes_id)
+            if ((datetime.datetime.now() - start_time).seconds / 60) >= 10:
+                await msg.edit(embed=discord.Embed(title=f'🔥 Жарим {user.name}',
+                                                   description="**Прогресс отжаривания:**\n" +
+                                                               f"Всё испортилось! 😕",
+                                                   colour=0xFF8F00))
+                return
             emojis = msg.reactions
             # print(emojis)
             react_count = None
@@ -40,22 +47,22 @@ class FunCommands(commands.Cog):
                     react_count = emoji.count
                     break
             if react_count is None:
-                await ctx.send('Кто-то украл всю еду! Вот розьбiйник!')
-                await msg.edit(embed=discord.Embed(title=f'Жарим {user.name}',
-                                                   description="**Прогресс отжаривания:**\n" + f"Успешно отжарено! "
-                                                                                               f"Всё украли! Расходимся!",
+                await ctx.send('Кто-то украл всю еду! Вот розьбiйник! 🤠')
+                await msg.edit(embed=discord.Embed(title=f'🔥 Жарим {user.name}',
+                                                   description="**Прогресс отжаривания:**\n" +
+                                                               f"Всё украли! Расходимся! 😡",
                                                    colour=0xFF8F00))
                 return
             pieces_count = 11 - react_count
-            embed = discord.Embed(title=f'Жарим {user.name}',
-                                  description="**Прогресс отжаривания:**\n" + f"Успешно отжарено! "
-                                                                              f"Хотите кусочек? Осталось {pieces_count} 🍗 ?",
+            embed = discord.Embed(title=f'🔥 Жарим {user.name}',
+                                  description="**Прогресс отжаривания:**\n" +
+                                              f"Хотите кусочек? Осталось {pieces_count} 🍗 ?",
                                   colour=0xFF8F00)
             await msg.edit(embed=embed)
             await asyncio.sleep(1)
-        await msg.edit(title=f'Жарим {user.name}',
-                       description="**Прогресс отжаривания:**\n" + f"Успешно отжарено! "
-                                                                   f"Всего сожрали!",
+        await msg.edit(title=f'🔥 Жарим {user.name}',
+                       description="**Прогресс отжаривания:**\n" +
+                                   f"Всего сожрали!",
                        colour=0xFF8F00)
 
     @commands.command()
