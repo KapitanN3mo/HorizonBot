@@ -119,7 +119,7 @@ class FunCommands(commands.Cog):
     @commands.command()
     async def cookie(self, ctx: commands.Context, user: discord.User):
         emb = discord.Embed(title=' ', description=f'{user.mention} <_> держи печеньку!', colour=0xe1ad0c)
-        emb.set_author(name=ctx.author.display_name, url=ctx.author.avatar_url)
+        emb.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
         emb.set_image(url='https://i.gifer.com/c0M.gif')
         await ctx.send(embed=emb)
 
