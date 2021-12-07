@@ -121,6 +121,7 @@ class FunCommands(commands.Cog):
         emb = discord.Embed(title=' ', description=f'{user.mention} <_> держи печеньку!', colour=0xe1ad0c)
         emb.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
         emb.set_image(url='https://i.gifer.com/c0M.gif')
+        emb.set_footer(text=f'Печеньки с любовью от {self.bot.user.name}', icon_url=self.bot.user.avatar_url)
         await ctx.send(embed=emb)
 
 
