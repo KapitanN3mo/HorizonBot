@@ -128,6 +128,11 @@ class FunCommands(commands.Cog):
 
     @commands.command()
     async def hug(self, ctx: commands.Context, user: discord.User):
+        if ctx.author.id in [414084925332127754]:
+            emb = discord.Embed(description='Вам запретили обниматься', colour=discord.Colour.red())
+            emb.set_author(name=self.bot.user.name, icon_url=self.bot.user.avatar_url)
+            await ctx.send(embed=emb)
+            return
         emb = discord.Embed(title='Обнимааааашкииии!',
                             description=f'{ctx.author.mention} стискивает в объятиях {user.mention}!', colour=0xe1ad0c)
         emb.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
