@@ -7,7 +7,7 @@ class BasicCommands(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @commands.has_any_role(admin_roles)
+    @commands.has_any_role(*admin_roles)
     @commands.command()
     async def send(self, ctx, channel: discord.TextChannel, *, message: str):
         print(message)
