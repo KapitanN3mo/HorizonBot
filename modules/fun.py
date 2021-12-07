@@ -119,7 +119,8 @@ class FunCommands(commands.Cog):
 
     @commands.command()
     async def cookie(self, ctx: commands.Context, user: discord.User):
-        emb = discord.Embed(title=' ', description=f'{user.mention} <_> держи печеньку!', colour=0xe1ad0c)
+        emb = discord.Embed(title=' ', description=f'{user.mention} <_> держи печеньку от {ctx.author.mention}!',
+                            colour=0xe1ad0c)
         emb.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
         emb.set_image(url=random.choice(cookie_gif))
         emb.set_footer(text=f'Печеньки с любовью от {self.bot.user.name}', icon_url=self.bot.user.avatar_url)
@@ -127,7 +128,8 @@ class FunCommands(commands.Cog):
 
     @commands.command()
     async def hug(self, ctx: commands.Context, user: discord.User):
-        emb = discord.Embed(title=' ', description=f'{user.mention} обнимааааашкиииии!', colour=0xe1ad0c)
+        emb = discord.Embed(title='Обнимааааашкииии!',
+                            description=f'{ctx.author.mention} стискивает в объятиях {user.mention}!', colour=0xe1ad0c)
         emb.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
         emb.set_image(url=random.choice(hug_gif))
         emb.set_footer(text=f'Провайдер обнимашек в ваше сердечко {self.bot.user.name}',
