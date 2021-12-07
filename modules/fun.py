@@ -116,6 +116,7 @@ class FunCommands(commands.Cog):
 
             await asyncio.sleep(1)
 
+    @commands.command()
     async def cookie(self, ctx: commands.Context, user: discord.User):
         emb = discord.Embed(title=' ', description=f'{user.mention} <_> держи печеньку!', colour=0xe1ad0c)
         emb.set_author(name=ctx.author.display_name, url=ctx.author.avatar_url)
