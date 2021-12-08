@@ -4,6 +4,8 @@ import random
 from assets.gif_url import *
 import discord
 from discord.ext import commands
+from discord_components import *
+from assets import feed
 
 
 class FunCommands(commands.Cog):
@@ -140,6 +142,29 @@ class FunCommands(commands.Cog):
         emb.set_footer(text=f'Провайдер обнимашек в ваше сердечко {self.bot.user.name}',
                        icon_url=self.bot.user.avatar_url)
         await ctx.send(embed=emb)
+
+    @commands.command()
+    async def feed(self, ctx, user: discord.User):
+        start_time = datetime.datetime.now()
+        f = feed.Feed.get_feeds()
+        labels = []
+        for fd in f:
+            labels.append(SelectOption(label=fd.name, value=fd.id, emoji=fd.emoji))
+        mes = await ctx.send('Выберите угощение:', components=[Select(placeholder='Выбрать...', options=labels)])
+        while True:
+            try:
+                selected = await self.bot.wait_for('select_option', timeout=60 * 60)
+                if selected.user.id == ctx.author.id and selected.message.id == mes.id:
+                    emb = discord.Embed(title='Прятного аппетита!', color=0x7FFFA0,
+                                        description=f'{ctx.author.mention} прислал {user.mention} вкусняшку!')
+                    emb.set_author(name=self.bot.user.name, icon_url=self.bot.user.avatar_url)
+                    await selected.respond(embed=emb, ephemeral=False)
+                    await ctx.send(feed.Feed.get_feed_by_id(selected.values[0]).emoji)
+                else:
+                    continue
+            except Exception as ex:
+                print(ex)
+                break
 
 
 def setup(bot: commands.Bot):
