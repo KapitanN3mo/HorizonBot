@@ -15,7 +15,6 @@ class Feed:
     def get_feed_by_id(cls, feed_id):
         for feed in cls.feeds:
             if feed.id == feed_id:
-                print(feed)
                 return feed
 
 
