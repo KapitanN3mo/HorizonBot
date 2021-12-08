@@ -139,7 +139,7 @@ class FunCommands(commands.Cog):
                             description=f'{ctx.author.mention} стискивает в объятиях {user.mention}!', colour=0xe1ad0c)
         emb.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
         emb.set_image(url=random.choice(hug_gif))
-        emb.set_footer(text=f'Провайдер обнимашек в ваше сердечко {self.bot.user.name}',
+        emb.set_footer(text=f'Провайдер обнимашек в ваше сердечко -  {self.bot.user.name}',
                        icon_url=self.bot.user.avatar_url)
         await ctx.send(embed=emb)
 
@@ -158,6 +158,8 @@ class FunCommands(commands.Cog):
                     emb = discord.Embed(title='Прятного аппетита!', color=0x7FFFA0,
                                         description=f'{ctx.author.mention} прислал {user.mention} вкусняшку!')
                     emb.set_author(name=self.bot.user.name, icon_url=self.bot.user.avatar_url)
+                    emb.set_footer(text=f'Производитель самой свежей и вкусной еды -  {self.bot.user.name}',
+                                   icon_url=self.bot.user.avatar_url)
                     await selected.respond(embed=emb, ephemeral=False)
                     await ctx.send(feed.Feed.get_feed_by_id(selected.values[0]).emoji)
                     break
