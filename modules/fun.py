@@ -160,6 +160,7 @@ class FunCommands(commands.Cog):
                     emb.set_author(name=self.bot.user.name, icon_url=self.bot.user.avatar_url)
                     await selected.respond(embed=emb, ephemeral=False)
                     await ctx.send(feed.Feed.get_feed_by_id(selected.values[0]).emoji)
+                    break
                 else:
                     continue
             except Exception as ex:
