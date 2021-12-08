@@ -145,7 +145,6 @@ class FunCommands(commands.Cog):
 
     @commands.command()
     async def feed(self, ctx, user: discord.User):
-        start_time = datetime.datetime.now()
         f = feed.Feed.get_feeds()
         labels = []
         for fd in f:
@@ -169,6 +168,8 @@ class FunCommands(commands.Cog):
                 print(ex)
                 break
 
+    @commands.command()
+    async def
 
 def setup(bot: commands.Bot):
     bot.add_cog(FunCommands(bot))
