@@ -2,6 +2,7 @@ import asyncio
 import datetime
 import random
 from assets.gif_url import *
+from assets.phrases import *
 import discord
 from discord.ext import commands
 from discord_components import *
@@ -78,7 +79,7 @@ class FunCommands(commands.Cog):
                                            colour=0xFF8F00))
 
     @commands.command()
-    async def kill(self, ctx, user: discord.User, state, channel: int):
+    async def block_voice(self, ctx, user: discord.User, state, channel: int):
         if state in ['true', 'True']:
             state = True
         else:
@@ -169,6 +170,13 @@ class FunCommands(commands.Cog):
                 print(ex)
                 break
 
+    def kill(self, ctx: commands.Context, user: discord.User):
+        emb = discord.Embed(title=' ', description=f'{ctx.author.mention}{random.choice(kill_phrases)}{user.mention}',
+                            colour=0xe1ad0c)
+        emb.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
+        emb.set_image(url=random.choice(kill_gif))
+        emb.set_footer(text=f'Похоронное агенство - {self.bot.user.name}', icon_url=self.bot.user.avatar_url)
+        await ctx.send(embed=emb)
 
 
 def setup(bot: commands.Bot):
