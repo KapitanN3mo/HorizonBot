@@ -170,7 +170,8 @@ class FunCommands(commands.Cog):
                 print(ex)
                 break
 
-    def kill(self, ctx: commands.Context, user: discord.User):
+    @commands.command()
+    async def kill(self, ctx: commands.Context, user: discord.User):
         emb = discord.Embed(title=' ', description=f'{ctx.author.mention}{random.choice(kill_phrases)}{user.mention}',
                             colour=0xe1ad0c)
         emb.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
