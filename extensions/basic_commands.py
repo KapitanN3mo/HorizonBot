@@ -1,14 +1,14 @@
 import discord
 from discord.ext import commands
-from componets import admin_role, admin_roles
+from modules import permissions
 
 
 class BasicCommands(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @commands.has_any_role(*admin_roles)
     @commands.command()
+    @permissions.admin_permission_require
     async def send(self, ctx, channel: discord.TextChannel, *, message: str):
         print(message)
         await channel.send(content=message)

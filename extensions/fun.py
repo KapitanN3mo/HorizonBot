@@ -1,12 +1,12 @@
 import asyncio
 import datetime
 import random
-from assets.gif_url import *
-from assets.phrases import *
+from assets.scripts.gif_url import *
+from assets.scripts.phrases import *
 import discord
 from discord.ext import commands
 from discord_components import *
-from assets import feed
+from assets.scripts import feed
 
 
 class FunCommands(commands.Cog):
@@ -155,7 +155,7 @@ class FunCommands(commands.Cog):
         while True:
             try:
                 selected = await self.bot.wait_for('select_option', timeout=60 * 60)
-                if selected.user.id == ctx.author.id and selected.message.id == mes.id:
+                if selected.user_id.id == ctx.author.id and selected.message.id == mes.id:
                     emb = discord.Embed(title='Прятного аппетита!', color=0x7FFFA0,
                                         description=f'{ctx.author.mention} прислал {user.mention} вкусняшку!')
                     emb.set_author(name=self.bot.user.name, icon_url=self.bot.user.avatar_url)

@@ -2,6 +2,8 @@ import os
 import platform
 import peewee
 
+import modules.datetime
+
 pf = platform.system()
 if pf == 'Windows':
     db = peewee.PostgresqlDatabase(host='127.0.0.1',
@@ -13,6 +15,7 @@ if pf == 'Windows':
 else:
     DATABASE_URL = os.environ['DATABASE_URL']
     db = peewee.PostgresqlDatabase(DATABASE_URL, sslmode='require')
+db.autorollback = True
 
 
 class BaseModel(peewee.Model):
@@ -26,27 +29,14 @@ class Users(BaseModel):
     xp = peewee.IntegerField(column_name='xp', null=False)
     in_voice_time = peewee.IntegerField(column_name='in_voice_time', null=False)
     sys_info = peewee.TextField(column_name='sys_info', null=False)
-    last_voice_time = peewee.TimestampField(column_name='last_voice_time', null=False)
 
     class Meta:
         table_name = 'server_users'
 
 
-class Warns(BaseModel):
-    warn_id = peewee.AutoField(primary_key=True, column_name='warn_id')
-    user = peewee.ForeignKeyField(Users, to_field='user_id', null=False, column_name='user')
-    owner = peewee.ForeignKeyField(Users, to_field='user_id', null=False, column_name='owner')
-    reason = peewee.TextField(null=False, column_name='reason')
-    datetime = peewee.TimestampField(null=False, column_name='datetime')
-    expiration = peewee.IntegerField(null=False, column_name='expiration')
-
-    class Meta:
-        table_name = 'warns'
-
-
 class Tasks(BaseModel):
     task_id = peewee.AutoField(primary_key=True, column_name='task_id')
-    owner = peewee.ForeignKeyField(Users, to_field='user_id', null=False, column_name='owner')
+    owner_id = peewee.ForeignKeyField(Users, to_field='user_id', null=False, column_name='owner_id')
     created_time = peewee.TimestampField(null=False, column_name='created_time')
     event_time = peewee.TimestampField(null=False, column_name='event_time')
     task_type = peewee.TextField(null=False, column_name='task_type')
@@ -56,8 +46,8 @@ class Tasks(BaseModel):
         table_name = 'tasks'
 
 
-class Servers(BaseModel):
-    server_id = peewee.BigIntegerField(primary_key=True, column_name='server_id')
+class Guilds(BaseModel):
+    guild_id = peewee.BigIntegerField(primary_key=True, column_name='guild_id')
     admins = peewee.TextField(null=False, column_name='admins')
     rules = peewee.TextField(null=True, column_name='rules')
     notify_channel = peewee.BigIntegerField(null=True, column_name='notify_channel')
@@ -65,12 +55,46 @@ class Servers(BaseModel):
     game_channel = peewee.BigIntegerField(null=True, column_name='game_channel')
 
     class Meta:
-        table_name = 'servers'
+        table_name = 'guilds'
+
+
+class Warns(BaseModel):
+    warn_id = peewee.AutoField(primary_key=True, column_name='warn_id')
+    guild_id = peewee.ForeignKeyField(Guilds, to_field='guild_id', column_name='guild_id', null=False)
+    user_id = peewee.ForeignKeyField(Users, to_field='user_id', null=False, column_name='user_id')
+    owner_id = peewee.ForeignKeyField(Users, to_field='user_id', null=False, column_name='owner_id')
+    reason = peewee.TextField(null=False, column_name='reason')
+    datetime = peewee.TimestampField(null=False, column_name='datetime')
+    expiration = peewee.IntegerField(null=False, column_name='expiration')
+
+    class Meta:
+        table_name = 'warns'
+
+
+class PrivateChannels(BaseModel):
+    channel_id = peewee.BigIntegerField(primary_key=True, column_name='channel_id')
+    owner_id = peewee.ForeignKeyField(Users, to_field='user_id', null=False, column_name='owner_id')
+    guild_id = peewee.ForeignKeyField(Guilds, to_field='guild_id', null=False, column_name='guild_id')
+
+    class Meta:
+        table_name = 'private_channels'
+
+
+class ControlMessages(BaseModel):
+    message_id = peewee.BigIntegerField(primary_key=True, column_name='message_id')
+    guild_id = peewee.ForeignKeyField(Guilds, to_field='guild_id', column_name='guild_id', null=False)
+    owner_id = peewee.ForeignKeyField(Users, to_field='user_id', column_name='owner_id', null=False)
+    message_type = peewee.TextField(column_name='message_type', null=False)
+    send_time = peewee.TimestampField(column_name='send_time', null=False, default=modules.datetime.get_msk_datetime())
+    message_data = peewee.TextField(column_name='message_data', null=False)
+
+    class Meta:
+        table_name = 'control_messages'
 
 
 Users.create_table()
+Guilds.create_table()
 Warns.create_table()
 Tasks.create_table()
-Servers.create_table()
-
-
+PrivateChannels.create_table()
+ControlMessages.create_table()

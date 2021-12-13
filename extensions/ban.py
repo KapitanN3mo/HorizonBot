@@ -31,10 +31,10 @@ class BanModule(commands.Cog):
     async def unban(self, ctx, user_id: int):
         banned_users = await ctx.guild.bans()
         for banned_member in banned_users:
-            if banned_member.user.id == user_id:
-                user = banned_member.user
+            if banned_member.user_id.id == user_id:
+                user = banned_member.user_id
                 await ctx.guild.unban(user)
-                await ctx.send(f':ok_hand: Бан пользователя {banned_member.user.name} будет снят!')
+                await ctx.send(f':ok_hand: Бан пользователя {banned_member.user_id.name} будет снят!')
 
     @unban.error
     async def unban_error(self, ctx, error):

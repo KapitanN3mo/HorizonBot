@@ -3,9 +3,9 @@ import json
 import math
 import discord
 from discord.ext import commands
-from componets import temp_file, get_msk_datetime, get_str_msk_datetime
+import database
+from modules.datetime import get_msk_datetime
 from database import *
-from componets import config
 
 
 class VoiceModule(commands.Cog):
@@ -34,45 +34,21 @@ class VoiceModule(commands.Cog):
 
         if before.channel is not None and after.channel is None:
             entry_time = self.voice_entry[member.id]
-            cursor.execute(sql.SQL('SELECT in_voice_time FROM server_users WHERE id = {member_id}').format(
-                member_id=sql.Literal(member.id)
-            ))
-            old_time = cursor.fetchone()
-            if old_time is None:
+            user = database.Users.get_or_none(database.Users.user_id == member.id)
+            if user is None:
                 return
-            else:
-                old_time = float(old_time[0])
             duration = (get_msk_datetime().replace(tzinfo=None) - entry_time).seconds
             if duration > int(config.get('Profile', 'voice_minimum_time')):
-                total_time = old_time + duration
-                cursor.execute(
-                    sql.SQL('UPDATE server_users SET in_voice_time = {total_time} WHERE id = {member_id}').format(
-                        member_id=sql.Literal(member.id),
-                        total_time=sql.Literal(total_time)
-                    ))
-                db.commit()
+                total_time = user.in_voice_time + duration
+                user.in_voice_time = total_time
                 xp_voice_multiplier = float(config.get('Profile', 'xp_voice_multiplier'))
                 voice_xp = (duration // 60) * xp_voice_multiplier
-                cursor.execute(sql.SQL('SELECT xp FROM server_users WHERE id = {member_id}').format(
-                    member_id=sql.Literal(member.id)
-                ))
-                before_xp = cursor.fetchone()[0]
-                total_xp = before_xp + voice_xp
-                cursor.execute(sql.SQL('UPDATE server_users SET xp = {total_xp} WHERE id = {member_id}').format(
-                    total_xp=sql.Literal(total_xp),
-                    member_id=sql.Literal(member.id)
-                ))
-                db.commit()
+                total_xp = user.xp + voice_xp
+                user.xp = total_xp
+                user.save()
             else:
                 voice_xp = 0
-            cursor.execute(sql.SQL('SELECT sys_info FROM server_users WHERE id = {member_id}').format(
-                member_id=sql.Literal(member.id)
-            ))
-            res = cursor.fetchone()
-            if res is None:
-                print('Voice ошибка чтения из БД')
-                return
-            sys_info = json.loads(res[0])
+            sys_info = json.loads(user.sys_info)
             if sys_info['send_dm_voice'] == 'true':
                 hours = duration // 3600
                 minutes = (duration - (hours * 3600)) // 60
