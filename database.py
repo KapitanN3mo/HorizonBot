@@ -29,9 +29,10 @@ class Users(BaseModel):
     xp = peewee.IntegerField(column_name='xp', null=False)
     in_voice_time = peewee.IntegerField(column_name='in_voice_time', null=False)
     sys_info = peewee.TextField(column_name='sys_info', null=False)
+    voice_entry = peewee.TimestampField(column_name='voice_entry', null=True)
 
     class Meta:
-        table_name = 'server_users'
+        table_name = 'users'
 
 
 class Tasks(BaseModel):
@@ -53,7 +54,11 @@ class Guilds(BaseModel):
     notify_channel = peewee.BigIntegerField(null=True, column_name='notify_channel')
     bot_channel = peewee.BigIntegerField(null=True, column_name='bot_channel')
     game_channel = peewee.BigIntegerField(null=True, column_name='game_channel')
-
+    mute_role = peewee.BigIntegerField(null=True, column_name='mute_role')
+    private_voice = peewee.BigIntegerField(null=True, column_name='private_voice')
+    minimum_voice_time = peewee.IntegerField(null=False, column_name='minimum_voice_time',default=10)
+    xp_voice_multiplier = peewee.FloatField(null=False,column_name='xp_voice_multiplier',default=1)
+    xp_message_multiplier = peewee.FloatField(null=False,column_name='xp_message_multiplier',default=1)
     class Meta:
         table_name = 'guilds'
 

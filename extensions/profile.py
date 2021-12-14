@@ -38,8 +38,8 @@ class ProfileModule(commands.Cog):
             embed.set_thumbnail(url=user.avatar_url)
             await ctx.send(embed=embed)
 
-    @classmethod
-    def update_xp(cls, user: discord.User, xp: int):
+    @staticmethod
+    def update_xp(user: discord.User, xp: int):
         user_data = database.Users.get_or_none(database.Users.user_id == user.id)
         if user_data is None:
             database.Users.create(user_id=user.id,
@@ -53,8 +53,8 @@ class ProfileModule(commands.Cog):
         user_data.xp = new_xp_count
         user_data.save()
 
-    @classmethod
-    def update_messages_count(cls, user: discord.User, msg: int):
+    @staticmethod
+    def update_messages_count(user: discord.User, msg: int):
         user_data = database.Users.get_or_none(database.Users.user_id == user.id)
         if user_data is None:
             database.Users.create(user_id=user.id,
@@ -69,7 +69,7 @@ class ProfileModule(commands.Cog):
         user_data.save()
 
     @staticmethod
-    def create_profile(user: discord.User):
+    def create_profile(user):
         try:
             database.Users.insert(user_id=user.id,
                                   message_count=0,
@@ -84,7 +84,7 @@ class ProfileModule(commands.Cog):
     def create_guild_profile(guild: discord.Guild):
         try:
             database.Guilds.insert(guild_id=guild.id,
-                                   admins=json.dumps([]))
+                                   admins=json.dumps([])).execute()
             return 1
         except:
             return 0

@@ -96,8 +96,10 @@ class WarnModule(commands.Cog):
         member = discord.utils.get(ctx.guild.members, id=ctx.author.id)
         permit = member.guild_permissions.kick_members
         if permit and user == 'all':
-            warn_list = database.Warns.select()
+            print('all')
+            warn_list = database.Warns.select().where(database.Warns.guild_id == ctx.guild.id)
         elif user != 'all' and user != '':
+            print('user')
             user = user.replace('<', '').replace('>', '').replace('@', '').replace('!', '')
             try:
                 user = int(user)
@@ -108,10 +110,13 @@ class WarnModule(commands.Cog):
                 raise InExcept(':exclamation:`Такого пользователя не существует`')
             warn_list = database.Warns.select().where(database.Warns.user_id == user.id)
         elif user == '':
+            print('self')
             warn_list = database.Warns.select().where(database.Warns.user_id == ctx.author.id)
+            print(type(warn_list))
         else:
             raise InExcept(
                 ':exclamation:`Вы можете посмортеть только свои варны, для этого просто используйте {warns} без аргументов`')
+        warn_list = [warn for warn in warn_list]
         if warn_list is None or warn_list == []:
             await ctx.send(':regional_indicator_n: :regional_indicator_o: `Не найдено предупреждений!`')
             return

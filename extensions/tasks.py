@@ -23,7 +23,6 @@ class StartTask(commands.Cog):
                     user = warn.user_id
                     warn_id = warn.warn_id
                     guild_id = warn.guild_id
-                    print(guild_id)
                     channel_id = database.Guilds.get_or_none(database.Guilds.guild_id == guild_id)
                     user = self.bot.get_user(user)
                     channel = self.bot.fetch_channel(channel_id)

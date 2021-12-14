@@ -1,5 +1,6 @@
 import discord
 from discord.ext import commands
+from extensions import profile
 
 
 class Events(commands.Cog):
@@ -8,6 +9,14 @@ class Events(commands.Cog):
 
     def __init__(self, bot: commands.Bot):
         self.bot = bot
+
+    @commands.Cog.listener()
+    async def on_guild_join(self, guild: discord.Guild):
+        profile.ProfileModule.create_guild_profile(guild)
+
+    @commands.Cog.listener()
+    async def on_member_join(self, member: discord.Member):
+        profile.ProfileModule.create_profile(member)
 
     @classmethod
     def connect_on_message(cls, hook):
