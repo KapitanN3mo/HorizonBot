@@ -159,7 +159,7 @@ class FunCommands(commands.Cog):
         while True:
             try:
                 selected = await self.bot.wait_for('select_option', timeout=60 * 60)
-                if selected.user_id.id == ctx.author.id and selected.message.id == mes.id:
+                if selected.user.id == ctx.author.id and selected.message.id == mes.id:
                     emb = discord.Embed(title='Прятного аппетита!', color=0x7FFFA0,
                                         description=f'{ctx.author.mention} прислал {user.mention} вкусняшку!')
                     emb.set_author(name=self.bot.user.name, icon_url=self.bot.user.avatar_url)
@@ -182,13 +182,7 @@ class FunCommands(commands.Cog):
         emb.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
         emb.set_image(url=random.choice(ave_maria))
         emb.set_footer(text=f'НА ИЕРУСАЛИМ!', icon_url=self.bot.user.avatar_url)
-        crusader_team = crusader.CrusaderTeam()
-        emb.add_field(name='Отряд:', value=crusader_team.get_string())
-        crusader_message = await ctx.send(embed=emb)
-        for emoji in [wr.emoji for wr in crusader_team.get_warriors_list()]:
-            await crusader_message.add_reaction(emoji)
-        crusader_message = await ctx.fetch_message(crusader_message.id)
-
+        await ctx.send(embed=emb)
 
     @commands.command()
     async def kill(self, ctx: commands.Context, user: discord.User):
