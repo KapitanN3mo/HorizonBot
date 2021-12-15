@@ -37,3 +37,10 @@ kill_gif = [
     'https://media.discordapp.net/attachments/911225950748946443/918209487574286366/kill11.gif',
     'https://media.discordapp.net/attachments/911225950748946443/918209488132124712/kill9.gif'
 ]
+ave_maria = [
+    'https://tenor.com/view/deus-vult-knight-weapons-dangerous-templar-gif-17265315',
+    'https://tenor.com/view/die-gun-shotgun-deus-vult-gif-17767114',
+    'https://tenor.com/view/shotgun-killing-me-deusvult-gif-20969969',
+    'https://tenor.com/view/deus-vult-prank-funny-loop-infinite-gif-17037670',
+    'https://tenor.com/view/meme-soniknowreligionisimportant-crusader-dues-vult-gif-11697017'
+]

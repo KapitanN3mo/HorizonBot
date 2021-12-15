@@ -171,6 +171,16 @@ class FunCommands(commands.Cog):
                 break
 
     @commands.command()
+    async def ave_maria(self, ctx: commands.Context):
+        emb = discord.Embed(title=' ',
+                            description=f'{ctx.author.mention} созывает всех верных Ордену на Великий Крестовый Поход!!',
+                            colour=0xe1ad0c)
+        emb.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
+        emb.set_image(url=random.choice(ave_maria))
+        emb.set_footer(text=f'НА ИЕРУСАЛИМ!', icon_url=self.bot.user.avatar_url)
+        await ctx.send(embed=emb)
+
+    @commands.command()
     async def kill(self, ctx: commands.Context, user: discord.User):
         emb = discord.Embed(title=' ', description=f'{ctx.author.mention}{random.choice(kill_phrases)}{user.mention}',
                             colour=0xe1ad0c)
