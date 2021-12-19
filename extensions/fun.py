@@ -1,12 +1,16 @@
 import asyncio
 import datetime
 import random
-from assets.scripts.gif_url import *
-from assets.scripts.phrases import *
+from extensions.events import Events
+from assets.fun_assets.gif_url import *
+from assets.fun_assets.phrases import *
 import discord
 from discord.ext import commands
 from discord_components import *
-from assets.scripts import feed
+from assets.fun_assets import feed
+from assets.crussader import crusader
+
+ave_maria_objects = []
 
 
 class FunCommands(commands.Cog):
@@ -79,7 +83,7 @@ class FunCommands(commands.Cog):
                                            colour=0xFF8F00))
 
     @commands.command()
-    async def block_voice(self, ctx, user: discord.User, state, channel: int):
+    async def lock_voice(self, ctx, user: discord.User, state, channel: int):
         if state in ['true', 'True']:
             state = True
         else:
@@ -178,7 +182,13 @@ class FunCommands(commands.Cog):
         emb.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
         emb.set_image(url=random.choice(ave_maria))
         emb.set_footer(text=f'НА ИЕРУСАЛИМ!', icon_url=self.bot.user.avatar_url)
-        await ctx.send(embed=emb)
+        crusader_team = crusader.CrusaderTeam()
+        emb.add_field(name='Отряд:', value=crusader_team.get_string())
+        crusader_message = await ctx.send(embed=emb)
+        for emoji in [wr.emoji for wr in crusader_team.get_warriors_list()]:
+            await crusader_message.add_reaction(emoji)
+        crusader_message = await ctx.fetch_message(crusader_message.id)
+
 
     @commands.command()
     async def kill(self, ctx: commands.Context, user: discord.User):
