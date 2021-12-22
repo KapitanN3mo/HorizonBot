@@ -56,9 +56,10 @@ class Guilds(BaseModel):
     game_channel = peewee.BigIntegerField(null=True, column_name='game_channel')
     mute_role = peewee.BigIntegerField(null=True, column_name='mute_role')
     private_voice = peewee.BigIntegerField(null=True, column_name='private_voice')
-    minimum_voice_time = peewee.IntegerField(null=False, column_name='minimum_voice_time',default=10)
-    xp_voice_multiplier = peewee.FloatField(null=False,column_name='xp_voice_multiplier',default=1)
-    xp_message_multiplier = peewee.FloatField(null=False,column_name='xp_message_multiplier',default=1)
+    minimum_voice_time = peewee.IntegerField(null=False, column_name='minimum_voice_time', default=10)
+    xp_voice_multiplier = peewee.FloatField(null=False, column_name='xp_voice_multiplier', default=1)
+    xp_message_multiplier = peewee.FloatField(null=False, column_name='xp_message_multiplier', default=1)
+
     class Meta:
         table_name = 'guilds'
 
@@ -95,6 +96,10 @@ class ControlMessages(BaseModel):
 
     class Meta:
         table_name = 'control_messages'
+
+
+class ApiAuth(BaseModel):
+    pass
 
 
 Users.create_table()
