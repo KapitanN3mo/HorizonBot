@@ -20,12 +20,12 @@ class ProfileModule(commands.Cog):
     async def profile(self, ctx: commands.Context, user: discord.User or None = None):
         if user is None:
             user = ctx.author
-        user_data = database.Users.select().where(database.Users.user_id == user.id).get_or_none()
+        user_data = database.User.select().where(database.User.user_id == user.id).get_or_none()
         if user_data is None:
             await ctx.send('Это ваше первое сообщение! Ваш профиль создан!')
         else:
             member = discord.utils.get(ctx.guild.members, id=user.id)
-            warns_count = len(database.Warns.select().where(database.Warns.user_id == user.id))
+            warns_count = len(database.Warn.select().where(database.Warn.user_id == user.id))
             embed = discord.Embed(title=' ', colour=member.colour, description=user.mention)
             embed.add_field(name='Количество сообщений', value=user_data.message_count)
             embed.add_field(name='Очки опыта', value=user_data.xp)
@@ -40,14 +40,14 @@ class ProfileModule(commands.Cog):
 
     @staticmethod
     def update_xp(user: discord.User, xp: int):
-        user_data = database.Users.get_or_none(database.Users.user_id == user.id)
+        user_data = database.User.get_or_none(database.User.user_id == user.id)
         if user_data is None:
-            database.Users.create(user_id=user.id,
-                                  message_count=0,
-                                  xp=0,
-                                  in_voice_time=0,
-                                  sys_info=json.dumps({'send_dm_voice': False}))
-            user_data = database.Users.get(database.Users.user_id == user.id)
+            database.User.create(user_id=user.id,
+                                 message_count=0,
+                                 xp=0,
+                                 in_voice_time=0,
+                                 sys_info=json.dumps({'send_dm_voice': False}))
+            user_data = database.User.get(database.User.user_id == user.id)
         current_xp_count = user_data.xp
         new_xp_count = current_xp_count + xp
         user_data.xp = new_xp_count
@@ -55,14 +55,14 @@ class ProfileModule(commands.Cog):
 
     @staticmethod
     def update_messages_count(user: discord.User, msg: int):
-        user_data = database.Users.get_or_none(database.Users.user_id == user.id)
+        user_data = database.User.get_or_none(database.User.user_id == user.id)
         if user_data is None:
-            database.Users.create(user_id=user.id,
-                                  message_count=0,
-                                  xp=0,
-                                  in_voice_time=0,
-                                  sys_info=json.dumps({'send_dm_voice': False}))
-            user_data = database.Users.get(database.Users.user_id == user.id)
+            database.User.create(user_id=user.id,
+                                 message_count=0,
+                                 xp=0,
+                                 in_voice_time=0,
+                                 sys_info=json.dumps({'send_dm_voice': False}))
+            user_data = database.User.get(database.User.user_id == user.id)
         current_msg_count = user_data.message_count
         new_msg_count = current_msg_count + msg
         user_data.message_count = new_msg_count
@@ -71,11 +71,11 @@ class ProfileModule(commands.Cog):
     @staticmethod
     def create_profile(user):
         try:
-            database.Users.insert(user_id=user.id,
-                                  message_count=0,
-                                  xp=0,
-                                  in_voice_time=0,
-                                  sys_info=json.dumps(profile_sys_info)).execute()
+            database.User.insert(user_id=user.id,
+                                 message_count=0,
+                                 xp=0,
+                                 in_voice_time=0,
+                                 sys_info=json.dumps(profile_sys_info)).execute()
             return 1
         except:
             return 0
@@ -83,8 +83,8 @@ class ProfileModule(commands.Cog):
     @staticmethod
     def create_guild_profile(guild: discord.Guild):
         try:
-            database.Guilds.insert(guild_id=guild.id,
-                                   admins=json.dumps([])).execute()
+            database.Guild.insert(guild_id=guild.id,
+                                  admins=json.dumps([])).execute()
             return 1
         except:
             return 0

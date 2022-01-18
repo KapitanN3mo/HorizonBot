@@ -16,17 +16,17 @@ class StartTask(commands.Cog):
 
     async def check_warns(self):
         while True:
-            warns = database.Warns.select()
+            warns = database.Warn.select()
             for warn in warns:
                 expiration_time = warn.datetime + datetime.timedelta(days=warn.expiration)
                 if expiration_time <= get_msk_datetime().replace(tzinfo=None):
                     user = warn.user_id
                     warn_id = warn.warn_id
                     guild_id = warn.guild_id
-                    channel_id = database.Guilds.get_or_none(database.Guilds.guild_id == guild_id)
+                    channel_id = database.Guild.get_or_none(database.Guild.guild_id == guild_id)
                     user = self.bot.get_user(user)
                     channel = self.bot.fetch_channel(channel_id)
-                    database.Warns.delete().where(database.Warns.warn_id == warn.id)
+                    database.Warn.delete().where(database.Warn.warn_id == warn.id)
                     if user is not None:
                         user = user.name
                     if channel is None:

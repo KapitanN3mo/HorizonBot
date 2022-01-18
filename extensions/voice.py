@@ -13,8 +13,8 @@ class VoiceModule(commands.Cog):
     @commands.Cog.listener()
     async def on_voice_state_update(self, member: discord.Member, before: discord.VoiceState,
                                     after: discord.VoiceState):
-        db_guild = database.Guilds.get_or_none(database.Guilds.guild_id == member.guild.id)
-        db_user = database.Users.get_or_none(database.Users.user_id == member.id)
+        db_guild = database.Guild.get_or_none(database.Guild.guild_id == member.guild.id)
+        db_user = database.User.get_or_none(database.User.user_id == member.id)
         if db_user is None:
             return
         if before.channel is None and after.channel is not None:
@@ -28,7 +28,7 @@ class VoiceModule(commands.Cog):
                 overwrite = discord.PermissionOverwrite()
                 overwrite.manage_channels = True
                 await private_channel.set_permissions(member, overwrite=overwrite)
-                db_private_channel = database.PrivateChannels()
+                db_private_channel = database.PrivateChannel()
                 db_private_channel.channel_id = private_channel
                 db_private_channel.owner_id = member.id
                 db_private_channel.guild_id = member.guild.id
@@ -37,7 +37,7 @@ class VoiceModule(commands.Cog):
 
         if before.channel is not None and after.channel is None:
             entry_time = db_user.voice_entry
-            user = database.Users.get_or_none(database.Users.user_id == member.id)
+            user = database.User.get_or_none(database.User.user_id == member.id)
             if user is None:
                 return
             duration = (get_msk_datetime() - entry_time).seconds
@@ -56,8 +56,8 @@ class VoiceModule(commands.Cog):
                 minutes = (duration - (hours * 3600)) // 60
                 await member.send(
                     f'Вы общались {hours} часов {minutes} минут. Начислен опыт: {voice_xp} очков')
-            db_private_channel = database.PrivateChannels.get_or_none(
-                database.PrivateChannels.channel_id == before.channel.id)
+            db_private_channel = database.PrivateChannel.get_or_none(
+                database.PrivateChannel.channel_id == before.channel.id)
             if db_private_channel is not None:
                 clients = before.channel.members
                 if not clients:
@@ -75,14 +75,14 @@ class VoiceModule(commands.Cog):
                 overwrite = discord.PermissionOverwrite()
                 overwrite.manage_channels = True
                 await private_channel.set_permissions(member, overwrite=overwrite)
-                db_private_channel = database.PrivateChannels()
+                db_private_channel = database.PrivateChannel()
                 db_private_channel.channel_id = private_channel
                 db_private_channel.owner_id = member.id
                 db_private_channel.guild_id = member.guild.id
                 db_private_channel.save()
                 await member.move_to(private_channel)
-            db_private_channel = database.PrivateChannels.get_or_none(
-                database.PrivateChannels.channel_id == before.channel.id)
+            db_private_channel = database.PrivateChannel.get_or_none(
+                database.PrivateChannel.channel_id == before.channel.id)
             if db_private_channel is not None:
                 clients = before.channel.members
                 if not clients:

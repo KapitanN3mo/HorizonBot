@@ -16,7 +16,7 @@ class MembersCommands(commands.Cog):
             mode = 'false'
         else:
             raise commands.errors.MissingRequiredArgument('')
-        user = database.Users.get_or_none(database.Users.user_id == ctx.author.id)
+        user = database.User.get_or_none(database.User.user_id == ctx.author.id)
         if user is None:
             print('User settings ошибка запроса в БД')
             await ctx.send('Ошибка')

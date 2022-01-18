@@ -20,14 +20,14 @@ class WarnModule(commands.Cog):
         self.bot = bot
 
     async def auto_warn(self, channel: discord.TextChannel, user: discord.User, expiration: int, reason: str):
-        warn = database.Warns()
+        warn = database.Warn()
         warn.user_id = user.id
         warn.owner_id = self.bot.user.id
         warn.reason = reason
         warn.datetime = get_msk_datetime()
         warn.expiration = expiration
         warn.save()
-        warns_count = len(database.Warns.get(database.Warns.user_id == user.id))
+        warns_count = len(database.Warn.get(database.Warn.user_id == user.id))
         embed = discord.Embed(title=f'Выдано предупреждение!', colour=discord.Colour.red())
         embed.add_field(name='Кому:', value=user.mention)
         embed.add_field(name='Причина:', value=reason)
@@ -52,7 +52,7 @@ class WarnModule(commands.Cog):
     @commands.has_permissions(kick_members=True)
     @commands.command()
     async def warn(self, ctx: commands.Context, user: discord.User, expiration: int, *, reason: str):
-        warn = database.Warns()
+        warn = database.Warn()
         warn.user_id = user.id
         warn.guild_id = ctx.guild.id
         warn.owner_id = ctx.author.id
@@ -60,7 +60,7 @@ class WarnModule(commands.Cog):
         warn.datetime = get_msk_datetime()
         warn.expiration = expiration
         warn.save()
-        warns_count = len(database.Warns.select().where(database.Warns.user_id == user.id))
+        warns_count = len(database.Warn.select().where(database.Warn.user_id == user.id))
         embed = discord.Embed(title=f'Выдано предупреждение!', colour=discord.Colour.red())
         embed.add_field(name='Кому:', value=user.mention)
         embed.add_field(name='Причина:', value=reason)
@@ -97,7 +97,7 @@ class WarnModule(commands.Cog):
         permit = member.guild_permissions.kick_members
         if permit and user == 'all':
             print('all')
-            warn_list = database.Warns.select().where(database.Warns.guild_id == ctx.guild.id)
+            warn_list = database.Warn.select().where(database.Warn.guild_id == ctx.guild.id)
         elif user != 'all' and user != '':
             print('user')
             user = user.replace('<', '').replace('>', '').replace('@', '').replace('!', '')
@@ -108,10 +108,10 @@ class WarnModule(commands.Cog):
             user = self.bot.get_user(user)
             if user is None:
                 raise InExcept(':exclamation:`Такого пользователя не существует`')
-            warn_list = database.Warns.select().where(database.Warns.user_id == user.id)
+            warn_list = database.Warn.select().where(database.Warn.user_id == user.id)
         elif user == '':
             print('self')
-            warn_list = database.Warns.select().where(database.Warns.user_id == ctx.author.id)
+            warn_list = database.Warn.select().where(database.Warn.user_id == ctx.author.id)
             print(type(warn_list))
         else:
             raise InExcept(
@@ -151,7 +151,7 @@ class WarnModule(commands.Cog):
     @commands.has_permissions(kick_members=True)
     @commands.command()
     async def remove_warn(self, ctx: commands.Context, warn_id: int):
-        warn = database.Warns.get_or_none(database.Warns.warn_id == warn_id)
+        warn = database.Warn.get_or_none(database.Warn.warn_id == warn_id)
         if warn is None:
             await ctx.send(f':x: `Такого варна не существует`')
         else:
@@ -184,7 +184,7 @@ class WarnModule(commands.Cog):
             if confirm_response.author == ctx.message.author and confirm_response.component.label == 'Да':
                 await confirm_response.respond(
                     content=f':ok_hand: Все предупреждения пользователя {user} будут удалены')
-                query = database.Warns.delete().where(database.Warns.user_id == user.id)
+                query = database.Warn.delete().where(database.Warn.user_id == user.id)
                 query.execute()
                 break
             elif confirm_response.author == ctx.message.author and confirm_response.component.label == 'Нет':

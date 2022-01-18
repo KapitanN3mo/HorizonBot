@@ -13,7 +13,7 @@ class MuteModule(commands.Cog):
     @commands.command()
     async def mute(self, ctx, user: discord.Member, time: float):
         try:
-            target_guild = database.Guilds.get_or_none(database.Guilds.guild_id == ctx.guild.id)
+            target_guild = database.Guild.get_or_none(database.Guild.guild_id == ctx.guild.id)
             if target_guild.mute_role is None:
                 await ctx.send('`Для сервера не настроена роль для мута`')
                 return
@@ -30,7 +30,7 @@ class MuteModule(commands.Cog):
     @commands.has_permissions(kick_members=True)
     @commands.command()
     async def unmute(self, ctx, user: discord.Member):
-        target_guild = database.Guilds.get_or_none(database.Guilds.guild_id == ctx.guild.id)
+        target_guild = database.Guild.get_or_none(database.Guild.guild_id == ctx.guild.id)
         if target_guild is None:
             await ctx.send('`Для сервера не настроена роль для мута`')
             return

@@ -16,6 +16,10 @@ class BanModule(commands.Cog):
             reason = 'Причина не указана'
         await user.ban(reason=reason)
         await ctx.send(f':white_check_mark: `Пользователь {user.display_name} забанен!`')
+        ban_emb = discord.Embed(title=f'Вы забанены на сервере {ctx.guild.name}',
+                                description=f'Администратор: {ctx.author.name}', colour=discord.Colour.red)
+
+        await user.send(embed=ban_emb)
 
     @ban.error
     async def ban_error(self, ctx, error):
@@ -31,10 +35,14 @@ class BanModule(commands.Cog):
     async def unban(self, ctx, user_id: int):
         banned_users = await ctx.guild.bans()
         for banned_member in banned_users:
-            if banned_member.user_id.id == user_id:
-                user = banned_member.user_id
+            if banned_member.user.id == user_id:
+                user = banned_member.user
                 await ctx.guild.unban(user)
-                await ctx.send(f':ok_hand: Бан пользователя {banned_member.user_id.name} будет снят!')
+                await ctx.send(f':ok_hand: Бан пользователя {user.name} будет снят!')
+                ban_emb = discord.Embed(title=f' Блокировка на сервере {ctx.guild.name} снята!',
+                                        description=f'Администратор: {ctx.author.name}', colour=discord.Colour.red)
+
+                await user.send(embed=ban_emb)
 
     @unban.error
     async def unban_error(self, ctx, error):
