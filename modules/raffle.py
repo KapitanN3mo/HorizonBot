@@ -37,9 +37,9 @@ class Raffle(commands.Cog):
         if date < componets.get_msk_datetime():
             await ctx.send(":exclamation: `Неверное время`")
             return
-        emb = discord.Embed(title="Внимание розыгрыш!", description=f'Победителей: {winner_count}',
+        emb = discord.Embed(title="Внимание розыгрыш!", description=text,
                             colour=discord.Colour.random())
-        emb.add_field(name='Информация', value=text)
+        emb.add_field(name='Количество победителей: ', value=winner_count)
         if show_author:
             emb.set_author(name=ctx.author.name, icon_url=ctx.author.avatar_url)
         emb.set_footer(text=f'Самые честные розыгрыши от HorizonBot!',
@@ -57,7 +57,11 @@ class Raffle(commands.Cog):
         participants = [participant for participant in await react.users().flatten() if
                         participant.id != self.bot.user.id]
         for i in range(winner_count):
-            winner = random.choice(participants)
+            try:
+                winner = random.choice(participants)
+            except IndexError:
+                await ctx.send(":disappointed_relieved: `К сожалению, участников недостаточно! Розыгрыш отменён!`")
+                return
             winners.append(winner)
             participants.remove(winner)
         guild_names = []
