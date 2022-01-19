@@ -47,7 +47,7 @@ class Raffle(commands.Cog):
         emb.add_field(name='Окончание в: ', value=f'{date.strftime("%m-%d-%H-%M")}')
         message = await channel.send(embed=emb)
         await message.add_reaction(emoji=emoji)
-        sleep_time = (date - datetime.datetime.now()).seconds
+        sleep_time = (date - componets.get_msk_datetime()).seconds
         await ctx.send(f'Время ожидания: {sleep_time}')
         await asyncio.sleep(sleep_time)
         message = await message.channel.fetch_message(id=message.id)
