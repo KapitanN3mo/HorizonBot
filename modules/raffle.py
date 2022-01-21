@@ -14,7 +14,7 @@ class Raffle(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    # @commands.has_any_role(*admin_roles)
+    @commands.has_any_role(*admin_roles)
     @commands.command()
     async def create_raffle(self, ctx: commands.Context, channel: discord.TextChannel, *, data: str):
         try:

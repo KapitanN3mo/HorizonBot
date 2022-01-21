@@ -15,6 +15,7 @@ class HelpModule(commands.Cog):
                       'desc': '**Хотите кого-то зажарить? Приятного аппетита!**'}]
         for command in functions:
             help_embed.add_field(name=command['desc'], value=command['use'])
+        help_embed.add_field(value='Знания о остальных командах вы должны добыть в бою', name='Остальные команды:')
         help_embed.set_author(name=self.bot.user.name, icon_url=self.bot.user.avatar_url)
         await ctx.send(embed=help_embed)
 
