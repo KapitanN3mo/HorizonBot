@@ -73,8 +73,9 @@ class WarnModule(commands.Cog):
             warn.save()
         except Exception as ex:
             print(traceback.print_exc())
+        user_db = database.User.get_or_none(database.User.user_id == user.id, database.User.guild_id == ctx.guild.id)
         warns_count = len(
-            database.Warn.select().where(database.Warn.user_id == user.id and database.Warn.guild_id == ctx.guild.id))
+            database.Warn.select().where(database.Warn.user_db_id == user_db, database.Warn.guild_id == ctx.guild.id))
         embed = discord.Embed(title=f'Выдано предупреждение!', colour=discord.Colour.red())
         embed.add_field(name='Кому:', value=user.mention)
         embed.add_field(name='Причина:', value=reason)
@@ -122,14 +123,16 @@ class WarnModule(commands.Cog):
             user = self.bot.get_user(user)
             if user is None:
                 raise InExcept(':exclamation:`Такого пользователя не существует`')
-            user_db = database.User.get_or_none(database.User.user_id == user.id)
+            user_db = database.User.get_or_none(
+                database.User.user_id == user.id, database.User.guild_id == ctx.guild.id)
+            print(user_db)
             warn_list = database.Warn.select().where(
-                database.Warn.user_db_id == user_db.user_db_id and database.Warn.guild_id == ctx.guild.id)
+                database.Warn.user_db_id == user_db.user_db_id, database.Warn.guild_id == ctx.guild.id)
+
         elif user == '':
             print('self')
             warn_list = database.Warn.select().where(
-                database.Warn.user_db_id == ctx.author.id and database.Warn.guild_id == ctx.guild.id)
-            print(type(warn_list))
+                database.Warn.user_db_id == ctx.author.id, database.Warn.guild_id == ctx.guild.id)
         else:
             raise InExcept(
                 ':exclamation:`Вы можете посмортеть только свои варны, для этого просто используйте {warns} без аргументов`')
@@ -173,7 +176,8 @@ class WarnModule(commands.Cog):
         if warn is None:
             await ctx.send(f':x: `Такого варна не существует`')
         else:
-            user = warn.user_id
+            user = warn.user_db_id
+            print(warn.user_db_id)
             warn.delete_instance()
             await ctx.send(
                 f':white_check_mark: `Варн №{warn_id} был удалён! Пользователь {self.bot.get_user(user.user_id).name}`')
@@ -202,7 +206,10 @@ class WarnModule(commands.Cog):
             if confirm_response.author == ctx.message.author and confirm_response.component.label == 'Да':
                 await confirm_response.respond(
                     content=f':ok_hand: Все предупреждения пользователя {user} будут удалены')
-                query = database.Warn.delete().where(database.Warn.user_id == user.id)
+                user_db = database.User.get_or_none(database.User.user_id == user.id,
+                                                    database.Guild.guild_id == ctx.guild.id)
+                query = database.Warn.delete().where(database.Warn.user_db_id == user_db.user_db_id,
+                                                     database.Warn.guild_id == ctx.guild.id)
                 query.execute()
                 break
             elif confirm_response.author == ctx.message.author and confirm_response.component.label == 'Нет':

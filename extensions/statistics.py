@@ -222,6 +222,7 @@ class Analyzer(commands.Cog):
     async def analyze_guilds(self):
         while True:
             for guild in self.bot.guilds:
+                print('check_guild')
                 db_guild = database.Guild.get_or_none(database.Guild.guild_id == guild.id)
                 if db_guild is None:
                     continue
@@ -231,9 +232,13 @@ class Analyzer(commands.Cog):
                 stat_info = json.loads(stat_info)
                 for method in stat_info:
                     if stat_info[method]['mode']:
+                        print(stat_info)
                         func = self.methods[method]
-                        await func(guild, stat_info[method])
-            await asyncio.sleep(10)
+                        try:
+                            await func(guild, stat_info[method])
+                        except Exception as ex:
+                            print(ex)
+            await asyncio.sleep(60*5)
 
     async def count_user_on_guild(self, guild: discord.Guild, stat_info):
         users_count = 0
@@ -269,7 +274,8 @@ class Analyzer(commands.Cog):
             await channel.edit(name=f'Сообщений: {self.cache[guild.id]["messages_count"]}')
         except KeyError:
             print('return')
-            await channel.edit(name=f'Сообщений: нет информации')
+            await channel.edit(name='Сообщений: нет информации')
+            print('edit complete')
 
 
 def setup(bot):
