@@ -2,7 +2,7 @@ import asyncio
 import datetime
 import json
 import random
-from modules.permissions import admin_permission_require
+from modules.permissions import admin_permission_required
 import discord
 from discord.ext import commands
 from modules.datetime import *
@@ -14,7 +14,7 @@ class Raffle(commands.Cog):
         self.bot = bot
 
     @commands.command()
-    @admin_permission_require
+    @admin_permission_required
     async def create_raffle(self, ctx: commands.Context, channel: discord.TextChannel, *, data: str):
         try:
             data = json.loads(data)
