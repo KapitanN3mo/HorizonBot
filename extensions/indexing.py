@@ -29,7 +29,10 @@ class Indexing(commands.Cog):
         print(f'Новые гильдии {new_guild_count}')
         with open('settings.json', 'r') as sf:
             developer = discord.utils.get(self.bot.users, id=json.load(sf)['dev_id'])
-            await developer.send(f'Новые пользователи: {new_user_count}\nНовые гильдии: {new_guild_count}')
+            await developer.send(embed=discord.Embed(title='Данные индексации',
+                                                     description=f'Новые пользователи: {new_user_count}'
+                                                                 f'\nНовые гильдии: {new_guild_count}',
+                                                     colour=discord.Colour.random()))
 
 
 def setup(bot):

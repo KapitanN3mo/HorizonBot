@@ -17,7 +17,7 @@ class BanModule(commands.Cog):
         await user.ban(reason=reason)
         await ctx.send(f':white_check_mark: `Пользователь {user.display_name} забанен!`')
         ban_emb = discord.Embed(title=f'Вы забанены на сервере {ctx.guild.name}',
-                                description=f'Администратор: {ctx.author.name}', colour=discord.Colour.red)
+                                description=f'Администратор: {ctx.author.name}', colour=discord.Colour.red())
 
         await user.send(embed=ban_emb)
 

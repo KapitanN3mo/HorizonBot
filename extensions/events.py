@@ -10,13 +10,37 @@ class Events(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
+    @classmethod
+    def connect_on_guild_join(cls, hook):
+        try:
+            cls.hooks['on_guild_join']
+        except KeyError:
+            cls.hooks['on_guild_join'] = []
+        finally:
+            cls.hooks['on_guild_join'].append(hook)
+
+    @classmethod
+    def connect_on_member_join(cls, hook):
+        try:
+            cls.hooks['on_member_join']
+        except KeyError:
+            cls.hooks['on_member_join'] = []
+        finally:
+            cls.hooks['on_member_join'].append(hook)
+
     @commands.Cog.listener()
     async def on_guild_join(self, guild: discord.Guild):
         profile.ProfileModule.create_guild_profile(guild)
+        if 'on_guild_join' in self.hooks:
+            for hook in self.hooks['on_guild_join']:
+                self.bot.loop.create_task(hook(guild))
 
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member):
         profile.ProfileModule.create_profile(member)
+        if 'on_member_join' in self.hooks:
+            for hook in self.hooks['on_member_join']:
+                self.bot.loop.create_task(hook(member))
 
     @classmethod
     def connect_on_message(cls, hook):

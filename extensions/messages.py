@@ -10,7 +10,12 @@ class Messages(commands.Cog):
         Events.connect_on_message(self.message_xp)
 
     async def message_xp(self, message: discord.Message):
-        ProfileModule.update_xp(message.author, 1)
+        if isinstance(message.channel, discord.DMChannel) or isinstance(message.channel, discord.GroupChannel):
+            return
+        member = discord.utils.get(message.guild.members, id=message.author.id)
+        if member is None:
+            print(f'None member {message.author}')
+        ProfileModule.update_xp(member, 1)
         ProfileModule.update_messages_count(message.author, 1)
 
 

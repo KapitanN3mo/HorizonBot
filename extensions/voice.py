@@ -54,8 +54,9 @@ class VoiceModule(commands.Cog):
             if sys_info['send_dm_voice'] == 'true':
                 hours = duration // 3600
                 minutes = (duration - (hours * 3600)) // 60
-                await member.send(
-                    f'Вы общались {hours} часов {minutes} минут. Начислен опыт: {voice_xp} очков')
+                await member.send(embed=discord.Embed(title='Начисление опыта', colour=discord.Color.random(),
+                                                      description=f'Вы общались {hours} часов {minutes} минут. '
+                                                                  f'Начислен опыт: {voice_xp} очков'))
             db_private_channel = database.PrivateChannel.get_or_none(
                 database.PrivateChannel.channel_id == before.channel.id)
             if db_private_channel is not None:

@@ -8,7 +8,7 @@ class BasicCommands(commands.Cog):
         self.bot = bot
 
     @commands.command()
-    @permissions.admin_permission_require
+    @permissions.admin_permission_required
     async def send(self, ctx, channel: discord.TextChannel, *, message: str):
         print(message)
         await channel.send(content=message)

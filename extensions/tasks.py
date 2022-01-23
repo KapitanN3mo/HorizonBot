@@ -5,7 +5,7 @@ import discord.utils
 from discord.ext import commands
 import database
 from modules.datetime import get_msk_datetime
-from extensions.events import Events
+from extensions.events import *
 
 
 class StartTask(commands.Cog):

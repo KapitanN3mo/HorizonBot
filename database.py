@@ -24,8 +24,30 @@ class BaseModel(peewee.Model):
         database = db
 
 
+class Guild(BaseModel):
+    guild_id = peewee.BigIntegerField(primary_key=True, column_name='guild_id')
+    admins = peewee.TextField(null=False, column_name='admins')
+    rules = peewee.TextField(null=True, column_name='rules')
+    notify_channel = peewee.BigIntegerField(null=True, column_name='notify_channel')
+    bot_channel = peewee.BigIntegerField(null=True, column_name='bot_channel')
+    game_channel = peewee.BigIntegerField(null=True, column_name='game_channel')
+    mute_role = peewee.BigIntegerField(null=True, column_name='mute_role')
+    private_voice = peewee.BigIntegerField(null=True, column_name='private_voice')
+    minimum_voice_time = peewee.IntegerField(null=False, column_name='minimum_voice_time', default=10)
+    xp_voice_multiplier = peewee.FloatField(null=False, column_name='xp_voice_multiplier', default=1)
+    xp_message_multiplier = peewee.FloatField(null=False, column_name='xp_message_multiplier', default=1)
+    statistics_category = peewee.BigIntegerField(null=True)
+    statistics_info = peewee.TextField(null=True)
+    day_message = peewee.IntegerField(null=True)
+
+    class Meta:
+        table_name = 'guilds'
+
+
 class User(BaseModel):
-    user_id = peewee.BigIntegerField(primary_key=True)
+    user_db_id = peewee.AutoField(primary_key=True)
+    user_id = peewee.BigIntegerField(null=False)
+    guild_id = peewee.ForeignKeyField(Guild, null=False, to_field='guild_id')
     message_count = peewee.IntegerField(null=False)
     xp = peewee.IntegerField(null=False)
     in_voice_time = peewee.IntegerField(null=False)
@@ -34,6 +56,9 @@ class User(BaseModel):
 
     class Meta:
         table_name = 'users'
+        indexes = (
+            (('user_id', 'guild_id'), True),
+        )
 
 
 class Task(BaseModel):
@@ -48,27 +73,10 @@ class Task(BaseModel):
         table_name = 'tasks'
 
 
-class Guild(BaseModel):
-    guild_id = peewee.BigIntegerField(primary_key=True, column_name='guild_id')
-    admins = peewee.TextField(null=False, column_name='admins')
-    rules = peewee.TextField(null=True, column_name='rules')
-    notify_channel = peewee.BigIntegerField(null=True, column_name='notify_channel')
-    bot_channel = peewee.BigIntegerField(null=True, column_name='bot_channel')
-    game_channel = peewee.BigIntegerField(null=True, column_name='game_channel')
-    mute_role = peewee.BigIntegerField(null=True, column_name='mute_role')
-    private_voice = peewee.BigIntegerField(null=True, column_name='private_voice')
-    minimum_voice_time = peewee.IntegerField(null=False, column_name='minimum_voice_time', default=10)
-    xp_voice_multiplier = peewee.FloatField(null=False, column_name='xp_voice_multiplier', default=1)
-    xp_message_multiplier = peewee.FloatField(null=False, column_name='xp_message_multiplier', default=1)
-
-    class Meta:
-        table_name = 'guilds'
-
-
 class Warn(BaseModel):
     warn_id = peewee.AutoField(primary_key=True, column_name='warn_id')
-    guild_id = peewee.ForeignKeyField(Guild, column_name='guild_id', null=False)
-    user_id = peewee.ForeignKeyField(User, null=False, column_name='user_id')
+    guild_id = peewee.ForeignKeyField(Guild, null=False, column_name='guild_id')
+    user_db_id = peewee.ForeignKeyField(User, null=False, column_name='user_id')
     owner_id = peewee.ForeignKeyField(User, null=False, column_name='owner_id')
     reason = peewee.TextField(null=False, column_name='reason')
     datetime = peewee.TimestampField(null=False, column_name='datetime')
@@ -80,7 +88,7 @@ class Warn(BaseModel):
 
 class PrivateChannel(BaseModel):
     channel_id = peewee.BigIntegerField(primary_key=True, column_name='channel_id')
-    owner_id = peewee.ForeignKeyField(User, null=False, column_name='owner_id')
+    owner_id = peewee.ForeignKeyField(User, null=False, column_name='owner_id', to_field='user_db_id')
     guild_id = peewee.ForeignKeyField(Guild, null=False, column_name='guild_id')
 
     class Meta:
@@ -121,17 +129,11 @@ class ApiUser(BaseModel):
         table_name = 'api_users'
 
 
-User.create_table()
 Guild.create_table()
+User.create_table()
 Warn.create_table()
 Task.create_table()
 PrivateChannel.create_table()
 BotMessage.create_table()
 Journal.create_table()
 ApiUser.create_table()
-
-if __name__ == '__main__':
-    us = ApiUser.create(user_id=990988,
-                        user_name='test',
-                        password_hash=generate_password_hash('qwerty'),
-                        user_type='user')

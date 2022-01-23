@@ -1,7 +1,7 @@
 import asyncio
 import datetime
 import json
-
+import traceback
 import database
 from modules.datetime import get_str_msk_datetime, get_msk_datetime, datetime_format
 from database import *
@@ -52,15 +52,29 @@ class WarnModule(commands.Cog):
     @commands.has_permissions(kick_members=True)
     @commands.command()
     async def warn(self, ctx: commands.Context, user: discord.User, expiration: int, *, reason: str):
-        warn = database.Warn()
-        warn.user_id = user.id
-        warn.guild_id = ctx.guild.id
-        warn.owner_id = ctx.author.id
-        warn.reason = reason
-        warn.datetime = get_msk_datetime()
-        warn.expiration = expiration
-        warn.save()
-        warns_count = len(database.Warn.select().where(database.Warn.user_id == user.id))
+        try:
+            print(f'{type(expiration)} {expiration}')
+            print(f'{type(reason)} {reason}')
+            db_user = database.User.get_or_none(database.User.user_id == user.id,
+                                                database.User.guild_id == ctx.guild.id)
+            db_author = database.User.get_or_none(database.User.user_id == ctx.author.id,
+                                                  database.User.guild_id == ctx.guild.id)
+            if db_user is None:
+                print('find error')
+                return
+            print(db_user.user_db_id, db_author.user_db_id)
+            warn = database.Warn()
+            warn.guild_id = ctx.guild.id
+            warn.user_db_id = db_user.user_db_id
+            warn.owner_id = db_author.user_db_id
+            warn.reason = reason
+            warn.datetime = get_msk_datetime()
+            warn.expiration = expiration
+            warn.save()
+        except Exception as ex:
+            print(traceback.print_exc())
+        warns_count = len(
+            database.Warn.select().where(database.Warn.user_id == user.id and database.Warn.guild_id == ctx.guild.id))
         embed = discord.Embed(title=f'Выдано предупреждение!', colour=discord.Colour.red())
         embed.add_field(name='Кому:', value=user.mention)
         embed.add_field(name='Причина:', value=reason)
@@ -98,7 +112,7 @@ class WarnModule(commands.Cog):
         if permit and user == 'all':
             print('all')
             warn_list = database.Warn.select().where(database.Warn.guild_id == ctx.guild.id)
-        elif user != 'all' and user != '':
+        elif user != 'all' and user != '' and permit:
             print('user')
             user = user.replace('<', '').replace('>', '').replace('@', '').replace('!', '')
             try:
@@ -108,10 +122,13 @@ class WarnModule(commands.Cog):
             user = self.bot.get_user(user)
             if user is None:
                 raise InExcept(':exclamation:`Такого пользователя не существует`')
-            warn_list = database.Warn.select().where(database.Warn.user_id == user.id)
+            user_db = database.User.get_or_none(database.User.user_id == user.id)
+            warn_list = database.Warn.select().where(
+                database.Warn.user_db_id == user_db.user_db_id and database.Warn.guild_id == ctx.guild.id)
         elif user == '':
             print('self')
-            warn_list = database.Warn.select().where(database.Warn.user_id == ctx.author.id)
+            warn_list = database.Warn.select().where(
+                database.Warn.user_db_id == ctx.author.id and database.Warn.guild_id == ctx.guild.id)
             print(type(warn_list))
         else:
             raise InExcept(
@@ -123,11 +140,12 @@ class WarnModule(commands.Cog):
         embed = discord.Embed(title=f'Предупрежденеия:', color=discord.Colour.random())
         for warn in warn_list:
             warn_id = warn.warn_id
-            user_id = warn.user_id.user_id
+            user_id = warn.user_db_id.user_id
             owner = warn.owner_id.user_id
             issue_time: datetime.datetime = warn.datetime
             expiration = warn.expiration
             expiration_time = issue_time + datetime.timedelta(days=expiration) - datetime.datetime.now()
+            reason = warn.reason
             owner = self.bot.get_user(owner)
             user_name = self.bot.get_user(user_id)
             if owner is not None:
@@ -135,7 +153,7 @@ class WarnModule(commands.Cog):
             if user_name is not None:
                 user_name = user_name.name
             embed.add_field(name=f'Warn#{warn_id}',
-                            value=f'Выдал {owner} -> {user_name} {issue_time} на {expiration} дней. Истечение через {expiration_time.days}:',
+                            value=f'Выдал {owner} -> {user_name} {issue_time} на {expiration} дней. Истечение через {expiration_time.days} Причина: {reason}',
                             inline=False)
         await ctx.send(embed=embed)
 

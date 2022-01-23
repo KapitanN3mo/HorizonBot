@@ -2,6 +2,8 @@ import json
 import discord
 from discord.ext import commands
 import database
+from modules.permissions import *
+from modules.scripts import *
 
 
 class MembersCommands(commands.Cog):
@@ -34,6 +36,8 @@ class MembersCommands(commands.Cog):
 
         elif isinstance(error, commands.errors.CommandInvokeError):
             await ctx.send(f':exclamation:`Произошла внутренняя ошибка : {error}`')
+
+
 
 
 def setup(bot):
