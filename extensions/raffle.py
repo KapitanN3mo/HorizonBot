@@ -6,7 +6,7 @@ from modules.permissions import admin_permission_required
 import discord
 from discord.ext import commands
 from modules.datetime import *
-
+from modules.bot_messages import raffle
 
 
 class Raffle(commands.Cog):
@@ -36,44 +36,8 @@ class Raffle(commands.Cog):
         if date < get_msk_datetime():
             await ctx.send(":exclamation: `Неверное время`")
             return
-        emb = discord.Embed(title="Внимание розыгрыш!", description=text,
-                            colour=discord.Colour.random())
-        emb.add_field(name='Количество победителей: ', value=winner_count)
-        if show_author:
-            emb.set_author(name=ctx.author.name, icon_url=ctx.author.avatar_url)
-        emb.set_footer(text=f'Самые честные розыгрыши от HorizonBot!',
-                       icon_url=self.bot.user.avatar_url)
-        emb.add_field(name='Окончание в: ', value=f'{date.strftime("%m-%d-%H-%M")}')
-        message = await channel.send(embed=emb)
-        await message.add_reaction(emoji=emoji)
-        sleep_time = (date - get_msk_datetime()).seconds
-        await ctx.send(f'Время ожидания: {sleep_time}')
-        await asyncio.sleep(sleep_time)
-        message = await message.channel.fetch_message(id=message.id)
-        reactions = message.reactions
-        react = [r for r in reactions if r.emoji == emoji][0]
-        winners = []
-        participants = [participant for participant in await react.users().flatten() if
-                        participant.id != self.bot.user.id]
-        for i in range(winner_count):
-            try:
-                winner = random.choice(participants)
-            except IndexError:
-                await ctx.send(":disappointed_relieved: `К сожалению, участников недостаточно! Розыгрыш отменён!`")
-                return
-            winners.append(winner)
-            participants.remove(winner)
-        guild_names = []
-        for winner in winners:
-            name = discord.utils.get(ctx.guild.members, id=winner.id)
-            guild_names.append(name)
-        emb = discord.Embed(title="Поздравляем победителя!",
-                            colour=discord.Colour.magenta())
-        emb.add_field(name='Победители:' if winner_count > 1 else "Победитель:",
-                      value="\n".join(name.display_name for name in guild_names if isinstance(name, discord.Member)))
-        emb.set_footer(text=f'Самые честные розыгрыши от HorizonBot!',
-                       icon_url=self.bot.user.avatar_url)
-        await ctx.send(embed=emb)
+        rf = raffle.RaffleMessage(self.bot, show_author, text, winner_count, emoji, date)
+        await rf.send()
 
 
 def setup(bot: commands.Bot):

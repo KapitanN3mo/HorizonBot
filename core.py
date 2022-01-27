@@ -16,7 +16,11 @@ class Bot:
     @classmethod
     def run(cls, mode='normal'):
         token = cls.settings['tokens'][mode]
-        for module in os.listdir('extensions'):
+        extensions = os.listdir('extensions')
+        if 'events.py' in extensions:
+            cls.bot.load_extension('extensions.events')
+            extensions.remove('events.py')
+        for module in extensions:
             if module.endswith('.py') and module != '__init__.py':
                 try:
                     cls.bot.load_extension(f'extensions.{module.replace(".py", "")}')

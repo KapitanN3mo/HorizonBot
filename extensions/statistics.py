@@ -202,6 +202,7 @@ class Analyzer(commands.Cog):
         self.methods['user_count'] = self.count_user_on_guild
         self.methods['messages_count'] = self.day_message_count
         Events.add_task(self.analyze_guilds)
+        Events.add_task(self.analyze_guilds)
         Events.connect_on_message(self.message_counter)
         self.cache = {}
 
