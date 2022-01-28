@@ -36,7 +36,8 @@ class Raffle(commands.Cog):
         if date < get_msk_datetime():
             await ctx.send(":exclamation: `Неверное время`")
             return
-        rf = raffle.RaffleMessage(self.bot, show_author, text, winner_count, emoji, date)
+        rf = raffle.RaffleMessage(self.bot, text, winner_count, emoji, date, channel, ctx.channel,
+                                  ctx.author if show_author else None)
         await rf.send()
 
 
