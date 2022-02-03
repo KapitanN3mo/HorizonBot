@@ -10,8 +10,8 @@ if pf == 'Windows':
     db = peewee.PostgresqlDatabase(host='127.0.0.1',
                                    port=5432,
                                    database='horizon_bot',
-                                   user='test',
-                                   password='qwerty')
+                                   user='HorizonBot',
+                                   password='s24d300')
 
 else:
     DATABASE_URL = os.environ['DATABASE_URL']
@@ -53,6 +53,7 @@ class User(BaseModel):
     in_voice_time = peewee.IntegerField(null=False)
     sys_info = peewee.TextField(null=False)
     voice_entry = peewee.TimestampField(null=True)
+    discord_name = peewee.TextField(null=False)
 
     class Meta:
         table_name = 'users'
@@ -99,9 +100,9 @@ class BotMessage(BaseModel):
     message_id = peewee.BigIntegerField(primary_key=True, column_name='message_id')
     guild_id = peewee.ForeignKeyField(Guild, column_name='guild_id', null=False)
     channel_id = peewee.BigIntegerField(column_name='channel_id', null=False)
-    owner_id = peewee.ForeignKeyField(User, column_name='owner_id', null=False)
+    author_id = peewee.ForeignKeyField(User, column_name='owner_id', null=False)
     message_type = peewee.TextField(column_name='message_type', null=False)
-    send_time = peewee.TimestampField(column_name='send_time', null=False, default=modules.datetime.get_msk_datetime())
+    send_time = peewee.TimestampField(column_name='send_time', default=modules.datetime.get_msk_datetime())
     message_data = peewee.TextField(column_name='message_data', null=False)
 
     class Meta:

@@ -207,7 +207,7 @@ class Analyzer(commands.Cog):
         self.cache = {}
 
     async def message_counter(self, message: discord.Message):
-        print('update_messages')
+        #print('update_messages')
         guild = message.guild
         if guild is None:
             return
@@ -223,7 +223,7 @@ class Analyzer(commands.Cog):
     async def analyze_guilds(self):
         while True:
             for guild in self.bot.guilds:
-                print('check_guild')
+               # print('check_guild')
                 db_guild = database.Guild.get_or_none(database.Guild.guild_id == guild.id)
                 if db_guild is None:
                     continue

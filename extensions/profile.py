@@ -6,6 +6,7 @@ import database
 from modules.datetime import datetime_format
 import datetime
 from modules import permissions
+from core import Bot
 
 default_sys_info = {
     'send_dm_voice': False
@@ -13,6 +14,7 @@ default_sys_info = {
 
 
 class ProfileModule(commands.Cog):
+
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
@@ -48,9 +50,13 @@ class ProfileModule(commands.Cog):
 
     @classmethod
     def update_xp(cls, user: discord.Member, xp: int):
-        user_data = database.User.get_or_none(database.User.user_id == user.id, database.User.guild_id == user.guild.id)
+        bot = Bot.get_bot()
+        if user.id == bot.user.id:
+            return
+        user_data = database.User.get_or_none(database.User.user_id == user.id,
+                                              database.User.guild_id == user.guild.id)
         if user_data is None:
-            cls.create_profile()
+            cls.create_profile(user)
             user_data = database.User.get(database.User.user_id == user.id, database.User.guild_id == user.guild.id)
         current_xp_count = user_data.xp
         new_xp_count = current_xp_count + xp
@@ -59,6 +65,9 @@ class ProfileModule(commands.Cog):
 
     @classmethod
     def update_messages_count(cls, user: discord.Member, msg: int):
+        bot = Bot.get_bot()
+        if user.id == bot.user.id:
+            return
         user_data = database.User.get_or_none(database.User.user_id == user.id, database.User.guild_id == user.guild.id)
         if user_data is None:
             cls.create_profile(user)
@@ -76,7 +85,8 @@ class ProfileModule(commands.Cog):
                                  message_count=0,
                                  xp=0,
                                  in_voice_time=0,
-                                 sys_info=json.dumps(default_sys_info)).execute()
+                                 sys_info=json.dumps(default_sys_info),
+                                 discord_name=user.name).execute()
             return 1
         except:
             return 0

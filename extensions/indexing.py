@@ -21,6 +21,8 @@ class Indexing(commands.Cog):
                 new_guild_count += 1
             for user_counter in range(len(guild.members)):
                 user = guild.members[user_counter]
+                #if user.id == self.bot.user.id:
+                #    continue
                 # print(f'{guild} -> {user.display_name}')
                 result = ProfileModule.create_profile(user)
                 if result == 1:

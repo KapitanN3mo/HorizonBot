@@ -1,12 +1,16 @@
-import asyncio
-import datetime
-import json
-import random
+import links
+import modules.datetime
 from modules.permissions import admin_permission_required
+from modules.datetime import *
+import traceback
+import json
+import database
 import discord
 from discord.ext import commands
-from modules.datetime import *
-from modules.bot_messages import raffle
+from modules.datetime import get_msk_datetime
+import asyncio
+import random
+from links import restore_funcs
 
 
 class Raffle(commands.Cog):
@@ -28,6 +32,7 @@ class Raffle(commands.Cog):
             winner_count = data['win_count']
             emoji = data['emoji']
         except KeyError:
+            print(traceback.print_exc())
             await ctx.send(":exclamation: `Недостаточно аргументов`")
             return
         except Exception as ex:
@@ -36,10 +41,138 @@ class Raffle(commands.Cog):
         if date < get_msk_datetime():
             await ctx.send(":exclamation: `Неверное время`")
             return
-        rf = raffle.RaffleMessage(self.bot, text, winner_count, emoji, date, channel, ctx.channel,
-                                  ctx.author if show_author else None)
+        rf = RaffleMessage(self.bot, text, winner_count, emoji, date, channel, ctx.channel,
+                           ctx.author if show_author else None)
         await rf.send()
+
+
+class RaffleMessage:
+    string = 'raffle'
+
+    def __init__(self, bot: commands.Bot, text=None, winner_count=None,
+                 emoji=None, date=None, send_channel=None, info_channel=None, author=None):
+        self.bot = bot
+        print(author)
+        self.show_author = False if author is None else True
+        self.text = text
+        self.winner_count = winner_count
+        self.emoji = emoji
+        self.date = date
+        self.send_channel = send_channel
+        self.info_channel = info_channel
+        self.author = author
+        self.message = None
+        self.db_message = None
+
+    @classmethod
+    def reg(cls):
+        restore_funcs[cls.string] = cls
+
+    async def send(self):
+        emb = discord.Embed(title="Внимание розыгрыш!", description=self.text,
+                            colour=discord.Colour.random())
+        emb.add_field(name='Количество победителей: ', value=self.winner_count)
+        if self.show_author:
+            emb.set_author(name=self.author.name, icon_url=self.author.avatar_url)
+        else:
+            self.author = self.bot.user
+        emb.set_footer(text=f'Самые честные розыгрыши от HorizonBot!',
+                       icon_url=self.bot.user.avatar_url)
+        emb.add_field(name='Окончание в: ', value=f'{self.date.strftime("%m-%d-%H-%M")}')
+
+        message = await self.send_channel.send(embed=emb)
+        await message.add_reaction(emoji=self.emoji)
+        self.message = message
+        db_user = database.User.get_or_none(database.User.user_id == self.author.id,
+                                            database.User.guild_id == self.message.guild.id)
+        db_message = database.BotMessage.create(
+            message_id=message.id,
+            guild_id=message.guild.id,
+            channel_id=message.channel.id,
+            author_id=db_user.user_db_id,
+            message_type=self.string,
+            message_data=json.dumps({
+                'winner_count': self.winner_count,
+                'text': self.text,
+                'emoji': self.emoji,
+                'show_author': self.show_author,
+                'info_channel': self.info_channel.id,
+                'end_date': self.date.strftime(modules.datetime.datetime_format),
+            })
+        )
+        self.db_message = db_message
+        await self.wait_time()
+
+    async def restore(self, db_message: database.BotMessage):
+        data = json.loads(db_message.message_data)
+        self.text = data['text']
+        self.show_author = data['show_author']
+        self.emoji = data['emoji']
+        self.winner_count = data['winner_count']
+
+        self.date = datetime.datetime.strptime(data['end_date'], modules.datetime.datetime_format)
+        self.info_channel = self.bot.get_channel(data['info_channel'])
+        self.send_channel = self.bot.get_channel(db_message.channel_id)
+
+        self.message = await self.send_channel.fetch_message(db_message.message_id)
+        if self.show_author:
+            guild = self.message.guild
+            self.author = discord.utils.get(guild.members, id=db_message.owner_id)
+        self.bot.loop.create_task(self.wait_time())
+        self.db_message = db_message
+
+    async def wait_time(self):
+        sleep_time = (self.date - get_msk_datetime()).seconds
+        if self.date < get_msk_datetime():
+            await self.select_winners()
+        else:
+            await self.info_channel.send(f'Время ожидания: {sleep_time}')
+            await asyncio.sleep(sleep_time)
+            await self.select_winners()
+        self.clear_db()
+
+    async def select_winners(self):
+        message = await self.send_channel.fetch_message(id=self.message.id)
+        reactions = message.reactions
+        react = [r for r in reactions if r.emoji == self.emoji][0]
+        winners = []
+        participants = [participant for participant in await react.users().flatten() if
+                        participant.id != self.bot.user.id]
+        for i in range(self.winner_count):
+            try:
+                winner = random.choice(participants)
+            except IndexError:
+                await self.info_channel.send(
+                    ":disappointed_relieved: `К сожалению, участников недостаточно! Розыгрыш отменён!`")
+                emb = discord.Embed(title='Розыгрыш отменён!', colour=discord.Colour.dark_gold(),
+                                    description='К сожалению, участников недостаточно!')
+                emb.set_footer(text=f'Самые честные розыгрыши от HorizonBot!',
+                               icon_url=self.bot.user.avatar_url)
+                await message.edit(embed=emb)
+                return
+            winners.append(winner)
+            participants.remove(winner)
+        guild_names = []
+        for winner in winners:
+            name = discord.utils.get(message.guild.members, id=winner.id)
+            guild_names.append(name)
+        emb = discord.Embed(title="Поздравляем победителя!",
+                            colour=discord.Colour.magenta(), description=self.text)
+        emb.add_field(name='Количество победителей: ', value=self.winner_count)
+        if self.show_author:
+            emb.set_author(name=self.author.name, icon_url=self.author.avatar_url)
+        emb.set_footer(text=f'Самые честные розыгрыши от HorizonBot!',
+                       icon_url=self.bot.user.avatar_url)
+        emb.add_field(name='Окончание в: ', value=f'{self.date.strftime("%m-%d-%H-%M")}', inline=False)
+        emb.add_field(name='Победители:' if self.winner_count > 1 else "Победитель:", inline=False,
+                      value="\n".join(name.display_name for name in guild_names if isinstance(name, discord.Member)))
+        await self.info_channel.send(embed=emb)
+        await message.edit(embed=emb)
+
+    def clear_db(self):
+        self.db_message.delete_instance()
 
 
 def setup(bot: commands.Bot):
     bot.add_cog(Raffle(bot))
+    RaffleMessage.reg()
