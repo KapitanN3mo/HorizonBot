@@ -11,6 +11,36 @@ class Events(commands.Cog):
         self.bot = bot
 
     @classmethod
+    def connect_on_raw_reaction_add(cls, hook):
+        try:
+            cls.hooks['on_raw_reaction_add']
+        except KeyError:
+            cls.hooks['on_raw_reaction_add'] = []
+        finally:
+            cls.hooks['on_raw_reaction_add'].append(hook)
+
+    @commands.Cog.listener()
+    async def on_raw_reaction_add(self, payload):
+        if 'on_raw_reaction_add' in self.hooks:
+            for hook in self.hooks['on_raw_reaction_add']:
+                self.bot.loop.create_task(hook(payload))
+
+    @classmethod
+    def connect_on_raw_reaction_remove(cls, hook):
+        try:
+            cls.hooks['on_raw_reaction_remove']
+        except KeyError:
+            cls.hooks['on_raw_reaction_remove'] = []
+        finally:
+            cls.hooks['on_raw_reaction_remove'].append(hook)
+
+    @commands.Cog.listener()
+    async def on_raw_reaction_add(self, payload):
+        if 'on_raw_reaction_remove' in self.hooks:
+            for hook in self.hooks['on_raw_reaction_remove']:
+                self.bot.loop.create_task(hook(payload))
+
+    @classmethod
     def connect_on_guild_join(cls, hook):
         try:
             cls.hooks['on_guild_join']
