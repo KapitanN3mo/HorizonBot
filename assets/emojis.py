@@ -1,3 +1,8 @@
 no_entry = ':no_entry:'
+no_entry_unicode = '⛔'
 white_check_mark = ':white_check_mark:'
+white_check_mark_unicode = '✅'
 exclamation = ':exclamation:'
+exclamation_unicode = '❗'
+question = ':question:'
+question_unicode = '❓'

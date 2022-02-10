@@ -1,9 +1,13 @@
+import json
+
 import discord
 from discord.ext import commands
-from modules.permissions import admin_permission_required
+
+import core
 import database
-import json
-from extensions.events import Events
+from core.bot_messages import Restorer
+from core.events import Events
+from modules.permissions import admin_permission_required
 
 
 class RoleSender(commands.Cog):
@@ -33,6 +37,7 @@ class RoleSender(commands.Cog):
 class RoleMessage:
     def __init__(self, bot: commands.Bot, send_channel: discord.TextChannel = None, message_data=None,
                  author: discord.Member = None, guild: discord.Guild = None):
+
         self.bot = bot
         self.guild = guild
         self.send_channel = send_channel
@@ -49,59 +54,44 @@ class RoleMessage:
         self.message = None
         self.db_message = None
 
+    async def start(self):
+        Events.connect_on_raw_reaction_remove(self.update)
+        Events.connect_on_raw_reaction_add(self.update)
+
     async def send(self):
         text = ''
         for ms in self.variants:
             ds_role = discord.utils.get(self.guild.roles, name=ms['name'])
             if ds_role is None:
                 ds_role = await self.guild.create_role(name=ms['name'], reason='Система выдачи ролей')
-                ms['id'] = ds_role.id
+            self.variants[self.variants.index(ms)]['id'] = ds_role.id
+            print(self.variants)
             text += f'{ms["emoji"]} - {ds_role.mention}\n'
         emb = discord.Embed(title=self.title, description=text, colour=discord.Colour(int(self.color, 16)))
         message = await self.send_channel.send(embed=emb)
         self.message = message
         for ms in self.variants:
             await self.message.add_reaction(ms['emoji'])
-        author = database.User.get(database.User.user_id == self.author.id, database.User.guild_id == self.guild)
+        author = database.User.get(database.User.user_id == self.author.id, database.User.guild_id == self.guild.id)
+        self.message_data['variants'] = self.variants
         self.db_message = database.BotMessage.create(
             message_id=self.message.id,
             guild_id=self.message.guild.id,
             channel_id=self.send_channel.id,
-            author_id=self.author.id,
+            author_id=author,
             message_type='role',
             message_data=json.dumps(self.message_data),
         )
-        Events.connect_on_raw_reaction_remove(self.update)
-        Events.connect_on_raw_reaction_add(self.update)
-
-    async def restore(self, db_message: database.BotMessage, remove=False):
-        self.db_message = db_message
-        if remove:
-            self.clear_db()
-            return
-        self.message_data = json.loads(db_message.message_data)
-        self.variants = self.message_data['variants']
-        self.color = self.message_data['color']
-        self.title = self.message_data['title']
-        self.guild = self.bot.get_guild(self.db_message.guild_id)
-
-        self.send_channel = self.bot.get_channel(db_message.channel_id)
-        if self.send_channel is None:
-            return
-        self.message = self.send_channel.fetch_message(db_message.message_id)
-        if self.message is None:
-            return
-        Events.connect_on_raw_reaction_remove(self.update)
-        Events.connect_on_raw_reaction_add(self.update)
+        await self.start()
 
     def clear_db(self):
         self.db_message.delete_instance()
 
     async def update(self, payload: discord.RawReactionActionEvent):
-        if payload.channel_id == self.send_channel.id:
+        if payload.channel_id == self.send_channel.id and payload.user_id != self.bot.user.id:
             if payload.event_type == 'REACTION_ADD':
                 member: discord.Member = payload.member
-                role = self.message.guild.get_role(self.variants[payload.emoji])
+                role = self.message.guild.get_role(self.find(emoji=payload.emoji)['id'])
                 await member.add_roles(role, reason='Выдача роли по эмодзи')
             elif payload.event_type == 'REACTION_REMOVE':
                 member = discord.utils.get(self.message.guild.members, id=payload.user_id)
@@ -111,11 +101,29 @@ class RoleMessage:
     def find(self, emoji=None, name=None):
         for ms in self.variants:
             if emoji:
-                if ms['emoji'] == emoji:
+                if ms['emoji'] == emoji.name:
                     return ms
             elif name:
                 if ms['name'] == name:
                     return ms
+
+
+@Restorer.reg_restore('role')
+async def restore(db_message: database.BotMessage):
+    print('restore')
+    bot = core.Bot.get_bot()
+    db_message = db_message
+    message_data = json.loads(db_message.message_data)
+    guild = bot.get_guild(db_message.guild_id)
+    send_channel = bot.get_channel(db_message.channel_id)
+    if send_channel is None:
+        return
+    message = await send_channel.fetch_message(db_message.message_id)
+    if message is None:
+        return
+    rm = RoleMessage(bot, send_channel, message_data, guild)
+    rm.message = message
+    bot.loop.create_task(rm.start())
 
 
 def setup(bot: commands.Bot):

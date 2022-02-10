@@ -6,7 +6,7 @@ from modules.scripts import *
 from modules.permissions import admin_permission_required
 import discord
 from assets import emojis
-from extensions.events import Events
+from core.events import Events
 
 
 class Statistics(commands.Cog):
@@ -207,7 +207,7 @@ class Analyzer(commands.Cog):
         self.cache = {}
 
     async def message_counter(self, message: discord.Message):
-        #print('update_messages')
+        # print('update_messages')
         guild = message.guild
         if guild is None:
             return
@@ -223,7 +223,7 @@ class Analyzer(commands.Cog):
     async def analyze_guilds(self):
         while True:
             for guild in self.bot.guilds:
-               # print('check_guild')
+                # print('check_guild')
                 db_guild = database.Guild.get_or_none(database.Guild.guild_id == guild.id)
                 if db_guild is None:
                     continue
@@ -239,7 +239,7 @@ class Analyzer(commands.Cog):
                             await func(guild, stat_info[method])
                         except Exception as ex:
                             print(ex)
-            await asyncio.sleep(60*5)
+            await asyncio.sleep(60 * 5)
 
     async def count_user_on_guild(self, guild: discord.Guild, stat_info):
         users_count = 0

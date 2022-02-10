@@ -1,8 +1,8 @@
 import json
 import discord
 from discord.ext import commands
-from extensions.events import Events
-from extensions.profile import ProfileModule
+from core.events import Events
+from core.profile import ProfileModule
 
 
 class Indexing(commands.Cog):

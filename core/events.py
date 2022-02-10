@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-from extensions import profile
+from core import profile
 
 
 class Events(commands.Cog):
@@ -35,7 +35,7 @@ class Events(commands.Cog):
             cls.hooks['on_raw_reaction_remove'].append(hook)
 
     @commands.Cog.listener()
-    async def on_raw_reaction_add(self, payload):
+    async def on_raw_reaction_remove(self, payload):
         if 'on_raw_reaction_remove' in self.hooks:
             for hook in self.hooks['on_raw_reaction_remove']:
                 self.bot.loop.create_task(hook(payload))

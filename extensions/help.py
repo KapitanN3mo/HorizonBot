@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 import pathlib
 import os
+from modules.permissions import admin_permission_required
 
 
 class HelpModule(commands.Cog):
@@ -14,14 +15,15 @@ class HelpModule(commands.Cog):
         functions = [{'use': 'h.fry {жертва} {на сколько кусочков нарезать}',
                       'desc': '**Хотите кого-то зажарить? Приятного аппетита!**'}]
         for command in functions:
-            help_embed.add_field(name=command['desc'], value=command['use'])
-        help_embed.add_field(value='Знания о остальных командах вы должны добыть в бою', name='Остальные команды:')
+            help_embed.add_field(name=command['desc'], value=command['use'], inline=False)
+        help_embed.add_field(value='Знания о остальных командах вы должны добыть в бою',
+                             name='Остальные команды:', inline=False)
         help_embed.set_author(name=self.bot.user.name, icon_url=self.bot.user.avatar_url)
         await ctx.send(embed=help_embed)
 
-    @commands.has_guild_permissions(administrator=True)
     @commands.command()
-    async def adm_help(self, ctx, command_name=None):
+    @admin_permission_required
+    async def admin_help(self, ctx, command_name=None):
         if command_name is not None:
             help_texts = os.listdir('help_texts')
             if f'{command_name}.txt' in help_texts:

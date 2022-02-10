@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
-from extensions.events import Events
-from extensions.profile import ProfileModule
+from core.events import Events
+from core.profile import ProfileModule
 import database
 
 
@@ -15,7 +15,7 @@ class Messages(commands.Cog):
             return
         member = discord.utils.get(message.guild.members, id=message.author.id)
         if member is None:
-            print(f'None member {message.author}')
+            return
         guild = message.guild
         db_guild = database.Guild.get_or_none(database.Guild.guild_id == guild.id)
         xp_multiplier = db_guild.xp_message_multiplier

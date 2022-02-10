@@ -1,3 +1,4 @@
+import core
 import links
 import modules.datetime
 from modules.permissions import admin_permission_required
@@ -11,6 +12,7 @@ from modules.datetime import get_msk_datetime
 import asyncio
 import random
 from links import restore_funcs
+from core.bot_messages import Restorer
 
 
 class Raffle(commands.Cog):
@@ -64,10 +66,6 @@ class RaffleMessage:
         self.message = None
         self.db_message = None
 
-    @classmethod
-    def reg(cls):
-        restore_funcs[cls.string] = cls
-
     async def send(self):
         emb = discord.Embed(title="Внимание розыгрыш!", description=self.text,
                             colour=discord.Colour.random())
@@ -102,24 +100,6 @@ class RaffleMessage:
         )
         self.db_message = db_message
         await self.wait_time()
-
-    async def restore(self, db_message: database.BotMessage):
-        data = json.loads(db_message.message_data)
-        self.text = data['text']
-        self.show_author = data['show_author']
-        self.emoji = data['emoji']
-        self.winner_count = data['winner_count']
-
-        self.date = datetime.datetime.strptime(data['end_date'], modules.datetime.datetime_format)
-        self.info_channel = self.bot.get_channel(data['info_channel'])
-        self.send_channel = self.bot.get_channel(db_message.channel_id)
-
-        self.message = await self.send_channel.fetch_message(db_message.message_id)
-        if self.show_author:
-            guild = self.message.guild
-            self.author = discord.utils.get(guild.members, id=db_message.owner_id)
-        self.bot.loop.create_task(self.wait_time())
-        self.db_message = db_message
 
     async def wait_time(self):
         sleep_time = (self.date - get_msk_datetime()).seconds
@@ -173,6 +153,28 @@ class RaffleMessage:
         self.db_message.delete_instance()
 
 
+@Restorer.reg_restore(name='raffle')
+async def restore(db_message: database.BotMessage):
+    bot = core.Bot.get_bot()
+    data = json.loads(db_message.message_data)
+    text = data['text']
+    show_author = data['show_author']
+    emoji = data['emoji']
+    winner_count = data['winner_count']
+    date = datetime.datetime.strptime(data['end_date'], modules.datetime.datetime_format)
+    info_channel = bot.get_channel(data['info_channel'])
+    send_channel = bot.get_channel(db_message.channel_id)
+    message = await send_channel.fetch_message(db_message.message_id)
+    if show_author:
+        guild = message.guild
+        author = discord.utils.get(guild.members, id=db_message.owner_id)
+    else:
+        author = None
+    rf = RaffleMessage(bot, text, winner_count, emoji, date, send_channel, info_channel, author)
+    rf.message = message
+    rf.db_message = db_message
+    bot.loop.create_task(rf.wait_time())
+
+
 def setup(bot: commands.Bot):
     bot.add_cog(Raffle(bot))
-    RaffleMessage.reg()

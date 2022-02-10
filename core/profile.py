@@ -51,7 +51,10 @@ class ProfileModule(commands.Cog):
     @classmethod
     def update_xp(cls, user: discord.Member, xp: int):
         bot = Bot.get_bot()
-        if user.id == bot.user.id:
+        try:
+            if user.id == bot.user.id:
+                return
+        except AttributeError:
             return
         user_data = database.User.get_or_none(database.User.user_id == user.id,
                                               database.User.guild_id == user.guild.id)
@@ -68,7 +71,11 @@ class ProfileModule(commands.Cog):
         bot = Bot.get_bot()
         if user.id == bot.user.id:
             return
-        user_data = database.User.get_or_none(database.User.user_id == user.id, database.User.guild_id == user.guild.id)
+        try:
+            user_data = database.User.get_or_none(database.User.user_id == user.id,
+                                                  database.User.guild_id == user.guild.id)
+        except AttributeError:
+            return
         if user_data is None:
             cls.create_profile(user)
             user_data = database.User.get(database.User.user_id == user.id, database.User.guild_id == user.guild.id)

@@ -39,6 +39,7 @@ class Guild(BaseModel):
     statistics_category = peewee.BigIntegerField(null=True)
     statistics_info = peewee.TextField(null=True)
     day_message = peewee.IntegerField(null=True)
+    webhook = peewee.TextField(null=True)
 
     class Meta:
         table_name = 'guilds'
@@ -128,6 +129,13 @@ class ApiUser(BaseModel):
 
     class Meta:
         table_name = 'api_users'
+
+
+class FunData(BaseModel):
+    data = peewee.TextField(null=False)
+
+    class Meta:
+        table_name = 'fun_data'
 
 
 Guild.create_table()

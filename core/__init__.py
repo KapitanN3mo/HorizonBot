@@ -16,10 +16,12 @@ class Bot:
     @classmethod
     def run(cls, mode='normal'):
         token = cls.settings['tokens'][mode]
+        cls.bot.load_extension('core.events')
+        cls.bot.load_extension('core.profile')
+        cls.bot.load_extension('core.indexing')
+        cls.bot.load_extension('core.bot_messages')
+
         extensions = os.listdir('extensions')
-        if 'events.py' in extensions:
-            cls.bot.load_extension('extensions.events')
-            extensions.remove('events.py')
         for module in extensions:
             if module.endswith('.py') and module != '__init__.py':
                 try:
