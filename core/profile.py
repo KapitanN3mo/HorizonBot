@@ -20,7 +20,18 @@ class ProfileModule(commands.Cog):
 
     @commands.command()
     async def top(self, ctx: commands.Context):
-        await ctx.send('Coming Soon!')
+        users = database.User.select().where(database.User.guild_id == ctx.guild.id) \
+            .order_by(-database.User.xp) \
+            .limit(20)
+        emb = discord.Embed(title='', color=discord.Colour(0xD1C300), description='')
+        emb.set_footer(text=f'Центр статистики имени {self.bot.user.name}', icon_url=self.bot.user.avatar_url)
+        emb.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
+        counter = 1
+        for user in users:
+            ds_user = self.bot.get_user(user.user_id)
+            emb.description += f'**[{counter}]**:{ds_user.mention} - {user.xp} xp\n'
+            counter += 1
+        await ctx.send(embed=emb)
 
     @commands.command()
     async def profile(self, ctx: commands.Context, user: discord.Member or None = None):

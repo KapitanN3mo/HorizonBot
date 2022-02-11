@@ -8,6 +8,7 @@ from database import *
 import discord
 from discord.ext import commands
 from discord_components import Button, ButtonStyle, Select
+from modules.permissions import admin_permission_required
 
 
 class InExcept(Exception):
@@ -49,8 +50,8 @@ class WarnModule(commands.Cog):
             except discord.errors.Forbidden:
                 await channel.send(f':sob: `Недостаточно прав! Не могу забанить {user.name}`')
 
-    @commands.has_permissions(kick_members=True)
     @commands.command()
+    @admin_permission_required
     async def warn(self, ctx: commands.Context, user: discord.User, expiration: int, *, reason: str):
         try:
             print(f'{type(expiration)} {expiration}')
@@ -169,8 +170,9 @@ class WarnModule(commands.Cog):
         else:
             await ctx.send(f':exclamation:`Произошла внутренняя ошибка : {error}`')
 
-    @commands.has_permissions(kick_members=True)
+
     @commands.command()
+    @admin_permission_required
     async def remove_warn(self, ctx: commands.Context, warn_id: int):
         warn = database.Warn.get_or_none(database.Warn.warn_id == warn_id)
         if warn is None:
@@ -191,8 +193,9 @@ class WarnModule(commands.Cog):
         else:
             await ctx.send(f':exclamation:`Произошла внутренняя ошибка : {error}`')
 
-    @commands.has_permissions(kick_members=True)
+
     @commands.command()
+    @admin_permission_required
     async def clear_warns(self, ctx: commands.Context, user: discord.User):
         comp = [[Button(label='Да', style=ButtonStyle.green), Button(label='Нет', style=ButtonStyle.red)]]
         await ctx.send(f':question: Вы действительно хотите очистить варны пользователя {user}', components=comp)
@@ -205,9 +208,9 @@ class WarnModule(commands.Cog):
                 continue
             if confirm_response.author == ctx.message.author and confirm_response.component.label == 'Да':
                 await confirm_response.respond(
-                    content=f':ok_hand: Все предупреждения пользователя {user} будут удалены')
+                    content=f':ok_hand: Все предупреждения пользователя {user} будут удалены',ephemeral=False)
                 user_db = database.User.get_or_none(database.User.user_id == user.id,
-                                                    database.Guild.guild_id == ctx.guild.id)
+                                                    database.User.guild_id == ctx.guild.id)
                 query = database.Warn.delete().where(database.Warn.user_db_id == user_db.user_db_id,
                                                      database.Warn.guild_id == ctx.guild.id)
                 query.execute()
