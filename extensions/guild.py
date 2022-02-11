@@ -61,7 +61,7 @@ class GuildsCommands(commands.Cog):
                       value='```' + str(db_guild.minimum_voice_time) + ' секунд```')
         emb.add_field(name='Множитель для голосовых каналов', value=f'```{db_guild.xp_voice_multiplier}```')
         emb.add_field(name='Множитель для текстовых каналов', value=f'```{db_guild.xp_message_multiplier}```')
-        await ctx.send(embed=emb)
+        message = await ctx.send(embed=emb)
 
 
 def setup(bot: commands.Bot):
