@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 from core.profile import ProfileModule
-from modules.permissions import admin_permission_required
+from permissions import admin_permission_required
 from assets import emojis
 
 

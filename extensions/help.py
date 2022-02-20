@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 import pathlib
 import os
-from modules.permissions import admin_permission_required
+from permissions import admin_permission_required
 
 
 class HelpModule(commands.Cog):

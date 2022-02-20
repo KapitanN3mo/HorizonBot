@@ -1,11 +1,9 @@
 import json
-import math
 import discord
 from discord.ext import commands
 import database
-from modules.datetime import datetime_format
-import datetime
-from modules import permissions
+from dt import datetime_format
+import dt
 from core import Bot
 
 default_sys_info = {

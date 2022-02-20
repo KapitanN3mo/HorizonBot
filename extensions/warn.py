@@ -1,14 +1,12 @@
 import asyncio
 import datetime
-import json
 import traceback
 import database
-from modules.datetime import get_str_msk_datetime, get_msk_datetime, datetime_format
-from database import *
+from dt import get_str_msk_datetime, get_msk_datetime
 import discord
 from discord.ext import commands
-from discord_components import Button, ButtonStyle, Select
-from modules.permissions import admin_permission_required
+from discord_components import Button, ButtonStyle
+from permissions import admin_permission_required
 
 
 class InExcept(Exception):
@@ -54,16 +52,12 @@ class WarnModule(commands.Cog):
     @admin_permission_required
     async def warn(self, ctx: commands.Context, user: discord.User, expiration: int, *, reason: str):
         try:
-            print(f'{type(expiration)} {expiration}')
-            print(f'{type(reason)} {reason}')
             db_user = database.User.get_or_none(database.User.user_id == user.id,
                                                 database.User.guild_id == ctx.guild.id)
             db_author = database.User.get_or_none(database.User.user_id == ctx.author.id,
                                                   database.User.guild_id == ctx.guild.id)
             if db_user is None:
-                print('find error')
                 return
-            print(db_user.user_db_id, db_author.user_db_id)
             warn = database.Warn()
             warn.guild_id = ctx.guild.id
             warn.user_db_id = db_user.user_db_id
@@ -126,7 +120,6 @@ class WarnModule(commands.Cog):
                 raise InExcept(':exclamation:`Такого пользователя не существует`')
             user_db = database.User.get_or_none(
                 database.User.user_id == user.id, database.User.guild_id == ctx.guild.id)
-            print(user_db)
             warn_list = database.Warn.select().where(
                 database.Warn.user_db_id == user_db.user_db_id, database.Warn.guild_id == ctx.guild.id)
 

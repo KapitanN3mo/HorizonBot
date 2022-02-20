@@ -2,8 +2,8 @@ import asyncio
 import json
 from discord.ext import commands
 import database
-from modules.scripts import *
-from modules.permissions import admin_permission_required
+import utils
+from permissions import admin_permission_required
 import discord
 from assets import emojis
 from core.events import Events
@@ -16,7 +16,7 @@ class Statistics(commands.Cog):
     @commands.command()
     @admin_permission_required
     async def statistics(self, ctx: commands.Context, mode):
-        mode = to_bool(mode)
+        mode = utils.to_bool(mode)
         db_guild = database.Guild.get_or_none(database.Guild.guild_id == ctx.guild.id)
         if mode:
             guild = ctx.guild
@@ -55,7 +55,7 @@ class Statistics(commands.Cog):
     @commands.command(aliases=['statistics.messages_count'])
     @admin_permission_required
     async def statistics_messages_count(self, ctx: commands.Context, mode):
-        mode = to_bool(mode)
+        mode = utils.to_bool(mode)
         db_guild = database.Guild.get_or_none(database.Guild.guild_id == ctx.guild.id)
         if db_guild.statistics_category is None:
             await ctx.send(f'{emojis.exclamation} `модуль статистики отключён!`')
@@ -126,7 +126,7 @@ class Statistics(commands.Cog):
     @commands.command(aliases=['statistics.user_count'])
     @admin_permission_required
     async def statistics_user_count(self, ctx: commands.Context, mode):
-        mode = to_bool(mode)
+        mode = utils.to_bool(mode)
         db_guild = database.Guild.get_or_none(database.Guild.guild_id == ctx.guild.id)
         if db_guild.statistics_category is None:
             await ctx.send(f'{emojis.exclamation} `модуль статистики отключён!`')

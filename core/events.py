@@ -6,6 +6,7 @@ from core import profile
 class Events(commands.Cog):
     hooks = {}
     tasks = []
+    links = {}
 
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -33,6 +34,15 @@ class Events(commands.Cog):
             cls.hooks['on_raw_reaction_remove'] = []
         finally:
             cls.hooks['on_raw_reaction_remove'].append(hook)
+
+    @classmethod
+    def disconnect_events(cls, obj):
+        print(cls.hooks)
+        for hook in cls.hooks:
+            for link in cls.hooks[hook]:
+                print(link, hook)
+                if obj == link:
+                    cls.hooks[hook].pop(link)
 
     @commands.Cog.listener()
     async def on_raw_reaction_remove(self, payload):

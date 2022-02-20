@@ -1,9 +1,7 @@
 import os
 import platform
 import peewee
-from werkzeug.security import generate_password_hash
-from werkzeug.security import check_password_hash
-import modules.datetime
+import dt
 
 pf = platform.system()
 if pf == 'Windows':
@@ -42,7 +40,7 @@ class Guild(BaseModel):
     webhook = peewee.TextField(null=True)
 
     class Meta:
-        table_name = 'guilds'
+        table_name = 'guild'
 
 
 class User(BaseModel):
@@ -103,7 +101,7 @@ class BotMessage(BaseModel):
     channel_id = peewee.BigIntegerField(column_name='channel_id', null=False)
     author_id = peewee.ForeignKeyField(User, column_name='owner_id', null=False)
     message_type = peewee.TextField(column_name='message_type', null=False)
-    send_time = peewee.TimestampField(column_name='send_time', default=modules.datetime.get_msk_datetime())
+    send_time = peewee.TimestampField(column_name='send_time', default=dt.get_msk_datetime())
     message_data = peewee.TextField(column_name='message_data', null=False)
 
     class Meta:
@@ -112,7 +110,7 @@ class BotMessage(BaseModel):
 
 class Journal(BaseModel):
     action_id = peewee.BigAutoField(primary_key=True, column_name='action_id')
-    timestamp = peewee.TimestampField(column_name='timestamp', null=False, default=modules.datetime.get_msk_datetime())
+    timestamp = peewee.TimestampField(column_name='timestamp', null=False, default=dt.get_msk_datetime())
     action_type = peewee.TextField(column_name='action_type', null=False)
     action_data = peewee.TextField(column_name='action_data', null=False)
 

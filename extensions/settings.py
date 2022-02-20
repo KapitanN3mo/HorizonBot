@@ -1,9 +1,4 @@
-import json
-import discord
-from discord.ext import commands
-import database
-from modules.permissions import *
-from modules.scripts import *
+from permissions import *
 
 
 class MembersCommands(commands.Cog):

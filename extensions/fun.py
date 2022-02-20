@@ -1,5 +1,5 @@
 import asyncio
-import datetime
+import dt
 import random
 from assets.fun_assets.gif_url import *
 from assets.fun_assets.phrases import *

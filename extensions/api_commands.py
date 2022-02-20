@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-from modules import permissions
+import permissions
 import database
 import secrets
 import string

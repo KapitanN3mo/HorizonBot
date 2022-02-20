@@ -1,14 +1,14 @@
 import discord
 from discord.ext import commands
 import json
-import datetime
+import dt
 import random
 from discord_components import Button, ButtonStyle
 import math
 import asyncio
 
-from modules.datetime import get_msk_datetime
-from modules.permissions import admin_permission_required
+from dt import get_msk_datetime
+from permissions import admin_permission_required
 
 
 class PollModule(commands.Cog):

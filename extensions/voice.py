@@ -2,9 +2,9 @@ import json
 import discord
 from discord.ext import commands
 import database
-from modules.datetime import get_msk_datetime
+from dt import get_msk_datetime
 from assets import emojis
-from modules.permissions import admin_permission_required
+from permissions import admin_permission_required
 
 
 class VoiceModule(commands.Cog):

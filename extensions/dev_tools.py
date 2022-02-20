@@ -1,10 +1,7 @@
 import os
 import importlib
-import discord
-from discord.ext import commands
 import subprocess
-from assets import emojis
-from modules.permissions import *
+from permissions import *
 
 
 class ExecuteModule(commands.Cog):

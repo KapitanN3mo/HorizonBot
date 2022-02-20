@@ -2,7 +2,6 @@ from functools import wraps
 import discord
 import database
 from discord.ext import commands
-from core import Bot
 import json
 from assets import emojis
 
@@ -26,6 +25,17 @@ def admin_permission_required(func):
     return wrapper
 
 
+def check_admin_permission(member: discord.Member, guild: discord.Guild):
+    if member.guild_permissions.administrator:
+        return True
+    else:
+        db_guild = database.Guild.get_or_none(database.Guild.guild_id == guild.id)
+        if member.id in json.loads(db_guild.admins):
+            return True
+        else:
+            return False
+
+
 def developer_permission_required(func):
     @wraps(func)
     async def wrapper(*args, **kwargs):
@@ -33,7 +43,7 @@ def developer_permission_required(func):
         with open('settings.json', 'r') as s_file:
             settings = json.load(s_file)
             if ctx.author.id in map(int, settings['developers']):
-                return func(*args, **kwargs)
+                return await func(*args, **kwargs)
             else:
                 await ctx.send(f'{emojis.no_entry}`У вас недостаточно прав для использования этой команды!`')
 

@@ -1,17 +1,14 @@
 import core
-import links
-import modules.datetime
-from modules.permissions import admin_permission_required
-from modules.datetime import *
+from permissions import admin_permission_required
+from dt import *
 import traceback
 import json
 import database
 import discord
 from discord.ext import commands
-from modules.datetime import get_msk_datetime
+from dt import get_msk_datetime
 import asyncio
 import random
-from links import restore_funcs
 from core.bot_messages import Restorer
 
 
@@ -95,7 +92,7 @@ class RaffleMessage:
                 'emoji': self.emoji,
                 'show_author': self.show_author,
                 'info_channel': self.info_channel.id,
-                'end_date': self.date.strftime(modules.datetime.datetime_format),
+                'end_date': self.date.strftime(datetime.datetime_format),
             })
         )
         self.db_message = db_message
@@ -161,7 +158,7 @@ async def restore(db_message: database.BotMessage):
     show_author = data['show_author']
     emoji = data['emoji']
     winner_count = data['winner_count']
-    date = datetime.datetime.strptime(data['end_date'], modules.datetime.datetime_format)
+    date = datetime.datetime.strptime(data['end_date'], datetime.datetime_format)
     info_channel = bot.get_channel(data['info_channel'])
     send_channel = bot.get_channel(db_message.channel_id)
     message = await send_channel.fetch_message(db_message.message_id)
