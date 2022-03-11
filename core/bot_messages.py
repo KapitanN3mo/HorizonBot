@@ -1,4 +1,4 @@
-from discord.ext import commands
+from disnake.ext import commands
 import database
 from core.events import Events
 from functools import wraps
@@ -14,7 +14,7 @@ class Restorer(commands.Cog):
     async def restore(self):
         messages = database.BotMessage.select()
         for message in messages:
-            print(f'restore -> {message.message_type}')
+            #print(f'restore -> {message.message_type}')
             for hook in self.restore_funcs[message.message_type]:
                 self.bot.loop.create_task(hook(message))
 

@@ -1,6 +1,6 @@
 import json
-import discord
-from discord.ext import commands
+import disnake
+from disnake.ext import commands
 from core.events import Events
 from core.profile import ProfileModule
 
@@ -29,12 +29,12 @@ class Indexing(commands.Cog):
                     new_user_count += 1
         print(f'Новые пользователи {new_user_count}')
         print(f'Новые гильдии {new_guild_count}')
-        with open('settings.json', 'r') as sf:
-            developer = discord.utils.get(self.bot.users, id=json.load(sf)['dev_id'])
-            await developer.send(embed=discord.Embed(title='Данные индексации',
-                                                     description=f'Новые пользователи: {new_user_count}'
-                                                                 f'\nНовые гильдии: {new_guild_count}',
-                                                     colour=discord.Colour.random()))
+        # with open('settings.json', 'r') as sf:
+        #     developer = disnake.utils.get(self.bot.users, id=json.load(sf)['dev_id'])
+        #     await developer.send(embed=disnake.Embed(title='Данные индексации',
+        #                                              description=f'Новые пользователи: {new_user_count}'
+        #                                                          f'\nНовые гильдии: {new_guild_count}',
+        #                                              colour=disnake.Colour.random()))
 
 
 def setup(bot):

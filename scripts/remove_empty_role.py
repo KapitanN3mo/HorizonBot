@@ -1,5 +1,5 @@
-import discord
-from discord.ext import commands
+import disnake
+from disnake.ext import commands
 from assets import emojis
 
 
@@ -14,8 +14,8 @@ class Script:
             bot_member = ctx.guild.get_member(self.bot.user.id)
             if role.name == '@everyone' or role in bot_member.roles:
                 continue
-            if role.color == discord.Colour.default():
+            if role.color == disnake.Colour.default():
                 counter += 1
                 await role.delete(reason='Удалено при выполнении скрипта')
-                await ctx.send(f'`  |Удалена роль {role.name}`')
+                # await ctx.send(f'`  |Удалена роль {role.name}`')
         await ctx.send(f'{emojis.white_check_mark}`Удалено {counter} ролей`')

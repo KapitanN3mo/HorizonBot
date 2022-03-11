@@ -1,12 +1,15 @@
 import asyncio
 import datetime
 import traceback
+from core import events
+import core
 import database
+import dt
 from dt import get_str_msk_datetime, get_msk_datetime
-import discord
-from discord.ext import commands
-from discord_components import Button, ButtonStyle
+import disnake
+from disnake.ext import commands
 from permissions import admin_permission_required
+from assets import emojis
 
 
 class InExcept(Exception):
@@ -17,8 +20,9 @@ class InExcept(Exception):
 class WarnModule(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
+        self.check_task = self.bot.loop.create_task(self.check_warn_expiration())
 
-    async def auto_warn(self, channel: discord.TextChannel, user: discord.User, expiration: int, reason: str):
+    async def auto_warn(self, channel: disnake.TextChannel, user: disnake.User, expiration: int, reason: str):
         warn = database.Warn()
         warn.user_id = user.id
         warn.owner_id = self.bot.user.id
@@ -27,30 +31,30 @@ class WarnModule(commands.Cog):
         warn.expiration = expiration
         warn.save()
         warns_count = len(database.Warn.get(database.Warn.user_id == user.id))
-        embed = discord.Embed(title=f'Выдано предупреждение!', colour=discord.Colour.red())
+        embed = disnake.Embed(title=f'Выдано предупреждение!', colour=disnake.Colour.red())
         embed.add_field(name='Кому:', value=user.mention)
         embed.add_field(name='Причина:', value=reason)
         embed.add_field(name='Выдан:', value=self.bot.user.mention)
         embed.add_field(name='Количество:', value=f'{warns_count}/3')
         embed.add_field(name='Срок истечения:', value=str(expiration))
-        embed.set_author(name=self.bot.user.name, icon_url=self.bot.user.avatar_url)
+        embed.set_author(name=self.bot.user.name, icon_url=self.bot.user.display_avatar.url)
         embed.set_footer(text=get_str_msk_datetime())
         await channel.send(embed=embed)
         if warns_count >= 3:
-            embed = discord.Embed(title='Автоматический бан',
+            embed = disnake.Embed(title='Автоматический бан',
                                   description=f'Пользователь {user.name} ({user.mention}) был забанен, так как получил 3 варна!',
                                   colour=0x000000)
-            member = discord.utils.get(channel.guild.members, id=user.id)
+            member = disnake.utils.get(channel.guild.members, id=user.id)
             await channel.send(embed=embed)
             await asyncio.sleep(5)
             try:
                 await member.ban(reason='Автоматический бан за 3 предупреждения')
-            except discord.errors.Forbidden:
+            except disnake.errors.Forbidden:
                 await channel.send(f':sob: `Недостаточно прав! Не могу забанить {user.name}`')
 
     @commands.command()
     @admin_permission_required
-    async def warn(self, ctx: commands.Context, user: discord.User, expiration: int, *, reason: str):
+    async def warn(self, ctx: commands.Context, user: disnake.User, expiration: int, *, reason: str):
         try:
             db_user = database.User.get_or_none(database.User.user_id == user.id,
                                                 database.User.guild_id == ctx.guild.id)
@@ -71,25 +75,25 @@ class WarnModule(commands.Cog):
         user_db = database.User.get_or_none(database.User.user_id == user.id, database.User.guild_id == ctx.guild.id)
         warns_count = len(
             database.Warn.select().where(database.Warn.user_db_id == user_db, database.Warn.guild_id == ctx.guild.id))
-        embed = discord.Embed(title=f'Выдано предупреждение!', colour=discord.Colour.red())
+        embed = disnake.Embed(title=f'Выдано предупреждение!', colour=disnake.Colour.red())
         embed.add_field(name='Кому:', value=user.mention)
         embed.add_field(name='Причина:', value=reason)
         embed.add_field(name='Выдан:', value=ctx.author.mention)
         embed.add_field(name='Количество:', value=f'{warns_count}/3')
         embed.add_field(name='Срок истечения:', value=str(expiration))
-        embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar_url)
+        embed.set_author(name=ctx.author.name, icon_url=ctx.author.display_avatar.url)
         embed.set_footer(text=get_str_msk_datetime())
         await ctx.send(embed=embed)
         if warns_count >= 3:
-            embed = discord.Embed(title='Автоматический бан',
+            embed = disnake.Embed(title='Автоматический бан',
                                   description=f'Пользователь {user.name} ({user.mention}) был забанен, так как получил 3 варна!',
                                   colour=0x000000)
-            member = discord.utils.get(ctx.guild.members, id=user.id)
+            member = disnake.utils.get(ctx.guild.members, id=user.id)
             await ctx.send(embed=embed)
             await asyncio.sleep(5)
             try:
                 await member.ban(reason='Автоматический бан за 3 предупреждения')
-            except discord.errors.Forbidden:
+            except disnake.errors.Forbidden:
                 await ctx.send(f':sob: `Недостаточно прав! Не могу забанить {user.name}`')
 
     @warn.error
@@ -103,13 +107,13 @@ class WarnModule(commands.Cog):
 
     @commands.command()
     async def warns(self, ctx: commands.Context, user: str = ''):
-        member = discord.utils.get(ctx.guild.members, id=ctx.author.id)
+        member = disnake.utils.get(ctx.guild.members, id=ctx.author.id)
         permit = member.guild_permissions.kick_members
         if permit and user == 'all':
-            print('all')
+            #print('all')
             warn_list = database.Warn.select().where(database.Warn.guild_id == ctx.guild.id)
         elif user != 'all' and user != '' and permit:
-            print('user')
+            #print('user')
             user = user.replace('<', '').replace('>', '').replace('@', '').replace('!', '')
             try:
                 user = int(user)
@@ -124,7 +128,7 @@ class WarnModule(commands.Cog):
                 database.Warn.user_db_id == user_db.user_db_id, database.Warn.guild_id == ctx.guild.id)
 
         elif user == '':
-            print('self')
+            #print('self')
             warn_list = database.Warn.select().where(
                 database.Warn.user_db_id == ctx.author.id, database.Warn.guild_id == ctx.guild.id)
         else:
@@ -134,7 +138,7 @@ class WarnModule(commands.Cog):
         if warn_list is None or warn_list == []:
             await ctx.send(':regional_indicator_n: :regional_indicator_o: `Не найдено предупреждений!`')
             return
-        embed = discord.Embed(title=f'Предупрежденеия:', color=discord.Colour.random())
+        embed = disnake.Embed(title=f'Предупрежденеия:', color=disnake.Colour.random())
         for warn in warn_list:
             warn_id = warn.warn_id
             user_id = warn.user_db_id.user_id
@@ -163,16 +167,15 @@ class WarnModule(commands.Cog):
         else:
             await ctx.send(f':exclamation:`Произошла внутренняя ошибка : {error}`')
 
-
     @commands.command()
     @admin_permission_required
     async def remove_warn(self, ctx: commands.Context, warn_id: int):
-        warn = database.Warn.get_or_none(database.Warn.warn_id == warn_id)
+        warn = database.Warn.get_or_none(database.Warn.warn_id == warn_id, database.Warn.guild_id == ctx.guild.id)
         if warn is None:
             await ctx.send(f':x: `Такого варна не существует`')
         else:
             user = warn.user_db_id
-            print(warn.user_db_id)
+            #print(warn.user_db_id)
             warn.delete_instance()
             await ctx.send(
                 f':white_check_mark: `Варн №{warn_id} был удалён! Пользователь {self.bot.get_user(user.user_id).name}`')
@@ -186,33 +189,66 @@ class WarnModule(commands.Cog):
         else:
             await ctx.send(f':exclamation:`Произошла внутренняя ошибка : {error}`')
 
-
     @commands.command()
     @admin_permission_required
-    async def clear_warns(self, ctx: commands.Context, user: discord.User):
-        comp = [[Button(label='Да', style=ButtonStyle.green), Button(label='Нет', style=ButtonStyle.red)]]
-        await ctx.send(f':question: Вы действительно хотите очистить варны пользователя {user}', components=comp)
-        start_time = get_msk_datetime().replace(tzinfo=None)
-        confirm_response = None
-        while (get_msk_datetime() - start_time).seconds < 120:
-            try:
-                confirm_response = await self.bot.wait_for('button_click', timeout=10)
-            except TimeoutError:
-                continue
-            if confirm_response.author == ctx.message.author and confirm_response.component.label == 'Да':
-                await confirm_response.respond(
-                    content=f':ok_hand: Все предупреждения пользователя {user} будут удалены',ephemeral=False)
-                user_db = database.User.get_or_none(database.User.user_id == user.id,
-                                                    database.User.guild_id == ctx.guild.id)
-                query = database.Warn.delete().where(database.Warn.user_db_id == user_db.user_db_id,
-                                                     database.Warn.guild_id == ctx.guild.id)
-                query.execute()
-                break
-            elif confirm_response.author == ctx.message.author and confirm_response.component.label == 'Нет':
-                await confirm_response.respond(content=f':x: Действие отменено')
-                break
-        else:
-            await confirm_response.respond(content=f':x: Истекло время ожидания')
+    async def clear_warns(self, ctx: commands.Context, user: disnake.Member):
+        view = ClearWarnView(ctx.author, user)
+        await ctx.send(f':question: Вы действительно хотите очистить варны пользователя {user}', view=view)
+
+    async def check_warn_expiration(self):
+        await asyncio.sleep(10)
+        while True:
+            for guild in self.bot.guilds:
+                db_guild: database.Guild = database.Guild.get_or_none(database.Guild.guild_id == guild.id)
+                if db_guild is None:
+                    database.Warn.delete().where(database.Warn.guild_id == guild.id).execute()
+                warns = database.Warn.select().where(database.Warn.guild_id == guild.id)
+                for warn in warns:
+                    if (warn.datetime + datetime.timedelta(days=warn.expiration)) < dt.get_msk_datetime():
+                        db_channel = guild.get_channel(db_guild.notify_channel)
+                        channel = db_channel if db_channel is not None else guild.system_channel
+                        user = guild.get_member(database.User.get(database.User.user_db_id == warn.user_db_id).user_id)
+                        await channel.send(
+                            f'{emojis.white_check_mark}`С пользователя `{user.mention}` снято предупреждение {warn.warn_id} за "{warn.reason}"`')
+                        database.Warn.delete().where(database.Warn.warn_id == warn.warn_id).execute()
+                    else:
+                        continue
+            await asyncio.sleep(600)
+
+
+class ClearWarnView(disnake.ui.View):
+    def __init__(self, owner: disnake.Member, user: disnake.Member):
+        self.user = user
+        self.owner = owner
+        super().__init__()
+
+    @disnake.ui.button(label='Очистить', style=disnake.ButtonStyle.green)
+    async def confirm(self, button: disnake.ui.Button, interaction: disnake.MessageInteraction):
+        if interaction.author.id == self.owner.id:
+            await interaction.response.send_message(
+                content=f':ok_hand: `Все предупреждения пользователя `{self.user.mention}` будут удалены`',
+                ephemeral=False)
+            user_db = database.User.get_or_none(database.User.user_id == self.user.id,
+                                                database.User.guild_id == self.user.guild.id)
+            query = database.Warn.delete().where(database.Warn.user_db_id == user_db.user_db_id,
+                                                 database.Warn.guild_id == self.user.guild.id)
+            query.execute()
+
+            await self.disable_button(interaction)
+            self.stop()
+
+    @disnake.ui.button(label='Отмена', style=disnake.ButtonStyle.red)
+    async def cancel(self, button: disnake.ui.Button, interaction: disnake.MessageInteraction):
+        if interaction.author.id == self.owner.id:
+            await interaction.response.send_message(content=f':x: `Действие отменено`')
+            await self.disable_button(interaction)
+            self.stop()
+
+    async def disable_button(self, interaction: disnake.MessageInteraction):
+        for button in self.children:
+            if isinstance(button, disnake.ui.Button):
+                button.disabled = True
+        await interaction.message.edit(view=self)
 
 
 def setup(bot):

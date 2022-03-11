@@ -1,5 +1,5 @@
-import discord
-from discord.ext import commands
+import disnake
+from disnake.ext import commands
 import permissions
 import database
 import secrets
@@ -21,12 +21,12 @@ class ApiCommands(commands.Cog):
             key = ''.join(secrets.choice(alphabet) for i in range(10))
             api_user = database.ApiUser(user_id=user.id, user_name=user.name, user_type='discord_user', user_key=key)
             api_user.save()
-            emb = discord.Embed(title='Учётная запись создана', description=f"Имя пользователя: {user.name}\n"
+            emb = disnake.Embed(title='Учётная запись создана', description=f"Имя пользователя: {user.name}\n"
                                                                             f"Пароль: {key}\n"
                                                                             f"**Внимание! Запишите пароль! Это сообщение будт удалено через 5 минут!**",
-                                color=discord.Color.green())
+                                color=disnake.Color.green())
         else:
-            emb = discord.Embed(title='У вас уже есть учётная запись!',description='Если вы не помните пароль, запросите новый!')
+            emb = disnake.Embed(title='У вас уже есть учётная запись!',description='Если вы не помните пароль, запросите новый!')
 
 
 def setup(bot: commands.Bot):

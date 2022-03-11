@@ -1,10 +1,11 @@
 import asyncio
 import json
+import math
 import sys
 
 from assets import emojis
-import discord
-from discord.ext import commands
+import disnake
+from disnake.ext import commands
 from assets.fun_assets.number_converter import convert_number_to_emoji
 import core
 import database
@@ -21,6 +22,8 @@ import dt
 #
 
 max_role_in_message = 9
+tasks = []
+all_messages = []
 
 
 class RoleSender(commands.Cog):
@@ -30,7 +33,7 @@ class RoleSender(commands.Cog):
 
     @commands.command()
     @admin_permission_required
-    async def create_role_message(self, ctx: commands.Context, channel: discord.TextChannel, *, data):
+    async def create_role_message(self, ctx: commands.Context, channel: disnake.TextChannel, *, data):
         author = ctx.author
         try:
             data: dict = json.loads(data)
@@ -44,38 +47,33 @@ class RoleSender(commands.Cog):
         except KeyError:
             await ctx.send(':exclamation: `Недостаточно данных в JSON аргументе`')
             return
-        selected_items = []
-        counter = 0
-        for ms in variants:
-            selected_items.append(ms)
-            counter += 1
-            if counter == max_role_in_message:
-                temp_data = data
-                temp_data['variants'] = selected_items
-                self.create_message_object(channel, temp_data, author, ctx.guild, init_channel=ctx.channel)
-                counter = 0
-                selected_items.clear()
-        if counter != 0:
+        iteration_count = math.ceil(len(variants) / max_role_in_message)
+        step = 0
+        for i in range(iteration_count):
+            start = step * max_role_in_message
+            stop = start + max_role_in_message
+            if step + 1 == iteration_count:
+                selected_items = variants[start:]
+            else:
+                selected_items = variants[start:stop]
             temp_data = data
             temp_data['variants'] = selected_items
+            # self.bot.loop.create_task(
+            await self.create_message_object(channel, temp_data, author, ctx.guild, init_channel=ctx.channel)
+            step += 1
 
-            self.create_message_object(channel, temp_data, author, ctx.guild, init_channel=ctx.channel)
-
-    def create_message_object(self, channel, data, author, guild, init_channel):
+    async def create_message_object(self, channel, data, author, guild, init_channel):
         rm = RoleMessage()
-        rm.create(channel, data, author, guild, init_channel)
-        self.bot.loop.create_task(rm.send())
+        await rm.create(channel, author, guild, data, init_channel)
+        await rm.send()
 
 
 class RoleMessage:
-    all_messages = []
 
     def __init__(self):
-        self.all_messages.append(self)
         self.bot = core.Bot.get_bot()
         self.guild = None
         self.send_channel = None
-        self.message_data = None
         self.author = None
         self.variants = None
         self.color = None
@@ -83,40 +81,38 @@ class RoleMessage:
         self.message = None
         self.db_message = None
         self.init_channel = None
-        print(f'init id {id(self)}')
 
-    async def create(self, send_channel: discord.TextChannel, author: discord.Member, guild: discord.Guild,
+    async def create(self, send_channel: disnake.TextChannel, author: disnake.Member, guild: disnake.Guild,
                      message_data, init_channel):
         self.send_channel = send_channel
         self.author = author
         self.guild = guild
-        self.message_data = message_data
         self.init_channel = init_channel
+        await self.unpack_data(message_data)
 
     async def unpack_data(self, message_data):
         # ситуация с исключениями возможна только при создании экземпляра.
         try:
             self.color = message_data['color']
         except KeyError:
-            self.color = discord.Colour.default()
+            self.color = disnake.Colour.default()
         try:
             self.title = message_data['title']
         except KeyError:
             self.title = 'Получение ролей'
         try:
             self.variants = message_data['variants']
+            #print(self.variants)
         except KeyError:
-            await self.init_channel.send('')
+            await self.init_channel.send(f'{emojis.no_entry}`Хм, а что выдавать-та?`')
+            self.end()
 
-    def restore(self, send_channel, message_data, guild, db_message, message):
+    async def restore(self, send_channel, message_data, guild, db_message, message):
         self.send_channel = send_channel
-        self.message_data = message_data
         self.guild = guild
         self.db_message = db_message
         self.message = message
-        self.variants = self.message_data['variants']
-        self.color = self.message['color']
-        self.title = self.message['title']
+        await self.unpack_data(message_data)
 
     async def start(self):
         Events.connect_on_raw_reaction_remove(self.update)
@@ -131,7 +127,7 @@ class RoleMessage:
             for i in db_roles:
                 for j in c_roles:
                     if i == j:
-                        return [False, discord.utils.get(self.guild.roles, name=i)]
+                        return [False, disnake.utils.get(self.guild.roles, name=i)]
         return [True]
 
     async def check_repeat_emoji(self):
@@ -143,11 +139,11 @@ class RoleMessage:
 
     async def prepare_data(self, ms, counter):
         if 'color' in ms:
-            color = discord.Colour(ms['color'])
+            color = disnake.Colour(ms['color'])
         else:
-            color = discord.Colour.default()
+            color = disnake.Colour.default()
         self.variants[self.variants.index(ms)]['color'] = color.value
-        ds_role: discord.Role = discord.utils.get(self.guild.roles, name=ms['name'])
+        ds_role: disnake.Role = disnake.utils.get(self.guild.roles, name=ms['name'])
         if ds_role is None:
             ds_role = await self.guild.create_role(name=ms['name'], reason='Система выдачи ролей',
                                                    color=color)
@@ -168,8 +164,8 @@ class RoleMessage:
             await self.init_channel.send(
                 f'{emojis.no_entry}`ВНИМАНИЕ! Ролью `{check_roles[1]} `уже управляет другое сообщение. Отправка отменена!`')
             return
-        emb = discord.Embed(title=self.title, description='',
-                            colour=discord.Colour(self.color))
+        emb = disnake.Embed(title=self.title, description='',
+                            colour=self.color)
         counter = 0
         for ms in self.variants:
             counter += 1
@@ -185,49 +181,52 @@ class RoleMessage:
         for ms in self.variants:
             await self.message.add_reaction(self.variants[self.variants.index(ms)]['emoji'])
         author = database.User.get(database.User.user_id == self.author.id, database.User.guild_id == self.guild.id)
-        self.message_data['variants'] = self.variants
+        message_data = {
+            'color': self.color,
+            'title': self.title,
+            'variants': self.variants
+        }
         self.db_message = database.BotMessage.create(
             message_id=self.message.id,
             guild_id=self.message.guild.id,
             channel_id=self.send_channel.id,
             author_id=author,
             message_type='role',
-            message_data=json.dumps(self.message_data),
+            message_data=json.dumps(message_data),
         )
         await self.start()
 
     def end(self):
         self.db_message.delete_instance()
         Events.disconnect_events(self.update)
-        self.all_messages.pop(self.all_messages.index(self))
-        self.alive = False
+        # all_messages.pop(all_messages.index(self))
 
     async def is_real_role(self, role, payload):
         if role is None:
             try:
-                guild: discord.Guild = self.bot.get_guild(payload.guild_id)
-                channel: discord.TextChannel = guild.get_channel(channel_id=payload.channel_id)
+                guild: disnake.Guild = self.bot.get_guild(payload.guild_id)
+                channel: disnake.TextChannel = guild.get_channel(channel_id=payload.channel_id)
                 message = await channel.fetch_message(payload.message_id)
-                emb = discord.Embed(title=' ',
+                emb = disnake.Embed(title=' ',
                                     description='Одна или несколько ролей из этого сообщения не найдены. Сообщение отключено',
-                                    color=discord.Colour.dark_gray())
+                                    color=disnake.Colour.dark_gray())
                 emb.set_footer(text=f'Время ошибки: {dt.get_str_msk_datetime()}',
                                icon_url=self.bot.user.avatar_url)
                 await message.edit(embed=emb)
                 await message.clear_reactions()
                 await message.add_reaction(emoji=emojis.no_entry_unicode)
                 return False
-            except discord.errors.NotFound:
+            except disnake.errors.NotFound:
                 return False
             finally:
                 self.end()
         else:
             return True
 
-    async def update(self, payload: discord.RawReactionActionEvent):
+    async def update(self, payload: disnake.RawReactionActionEvent):
         if payload.message_id == self.message.id and payload.user_id != self.bot.user.id:
             if payload.event_type == 'REACTION_ADD':
-                member: discord.Member = payload.member
+                member: disnake.Member = payload.member
                 try:
                     role = self.message.guild.get_role(self.find(emoji=payload.emoji)['id'])
                 except TypeError:
@@ -235,7 +234,7 @@ class RoleMessage:
                 if await self.is_real_role(role, payload):
                     await member.add_roles(role, reason='Выдача роли по эмодзи')
             elif payload.event_type == 'REACTION_REMOVE':
-                member = discord.utils.get(self.message.guild.members, id=payload.user_id)
+                member = disnake.utils.get(self.message.guild.members, id=payload.user_id)
                 try:
                     role = self.message.guild.get_role(self.find(emoji=payload.emoji)['id'])
                 except TypeError:
@@ -266,11 +265,12 @@ async def restore(db_message: database.BotMessage):
         return
     try:
         message = await send_channel.fetch_message(db_message.message_id)
-    except discord.errors.NotFound:
+    except disnake.errors.NotFound:
         rm.end()
         return
-    rm.restore(send_channel, message_data, guild, db_message, message)
-    bot.loop.create_task(rm.start())
+    await rm.restore(send_channel, message_data, guild, db_message, message)
+    future = bot.loop.create_task(rm.start())
+    tasks.append(future)
 
 
 def setup(bot: commands.Bot):

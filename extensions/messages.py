@@ -1,5 +1,5 @@
-import discord
-from discord.ext import commands
+import disnake
+from disnake.ext import commands
 from core.events import Events
 from core.profile import ProfileModule
 import database
@@ -10,10 +10,10 @@ class Messages(commands.Cog):
         self.bot = bot
         Events.connect_on_message(self.message_xp)
 
-    async def message_xp(self, message: discord.Message):
-        if isinstance(message.channel, discord.DMChannel) or isinstance(message.channel, discord.GroupChannel):
+    async def message_xp(self, message: disnake.Message):
+        if isinstance(message.channel, disnake.DMChannel) or isinstance(message.channel, disnake.GroupChannel):
             return
-        member = discord.utils.get(message.guild.members, id=message.author.id)
+        member = disnake.utils.get(message.guild.members, id=message.author.id)
         if member is None:
             return
         guild = message.guild

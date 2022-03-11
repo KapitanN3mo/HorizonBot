@@ -2,7 +2,7 @@ import os
 import importlib
 import subprocess
 from permissions import *
-
+from assets import emojis
 
 class ExecuteModule(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -16,8 +16,10 @@ class ExecuteModule(commands.Cog):
         stdout, stderr = proc.communicate()
         if stdout.decode("utf-8"):
             await ctx.send(f'Ваш код выполнен!\n```{stdout.decode("utf-8")}```')
-        if stderr.decode("utf-8"):
+        elif stderr.decode("utf-8"):
             await ctx.send(f'Ошибка:\n```{stderr.decode("utf-8")}```')
+        else:
+            await ctx.send(f'{emojis.exclamation}`Нет результатов выполнения`')
         proc.kill()
 
     @commands.command()
@@ -33,7 +35,7 @@ class ExecuteModule(commands.Cog):
     @commands.command()
     @developer_permission_required
     async def scripts(self, ctx: commands.Context):
-        embed = discord.Embed(title='Список установленных скриптов', colour=discord.Colour(0x00FF9E))
+        embed = disnake.Embed(title='Список установленных скриптов', colour=disnake.Colour(0x00FF9E))
         text = ''
         for script in os.listdir('scripts'):
             if script == '__init__.py' or script == '__pycache__':

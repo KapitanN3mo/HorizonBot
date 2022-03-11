@@ -1,7 +1,7 @@
 from functools import wraps
-import discord
+import disnake
 import database
-from discord.ext import commands
+from disnake.ext import commands
 import json
 from assets import emojis
 
@@ -10,9 +10,9 @@ def admin_permission_required(func):
     @wraps(func)
     async def wrapper(*args, **kwargs):
         ctx: commands.Context = args[1]
-        user: discord.User = ctx.author
-        guild: discord.Guild = ctx.guild
-        member: discord.Member = discord.utils.get(guild.members, id=user.id)
+        user: disnake.User = ctx.author
+        guild: disnake.Guild = ctx.guild
+        member: disnake.Member = disnake.utils.get(guild.members, id=user.id)
         if member.guild_permissions.administrator:
             return await func(*args, **kwargs)
         else:
@@ -25,7 +25,7 @@ def admin_permission_required(func):
     return wrapper
 
 
-def check_admin_permission(member: discord.Member, guild: discord.Guild):
+def check_admin_permission(member: disnake.Member, guild: disnake.Guild):
     if member.guild_permissions.administrator:
         return True
     else:

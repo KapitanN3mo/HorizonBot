@@ -1,5 +1,5 @@
-import discord
-from discord.ext import commands
+import disnake
+from disnake.ext import commands
 from assets import emojis
 import core
 import database
@@ -114,10 +114,6 @@ class GNotifyChannel(GProperty):
             return f'```{emojis.no_entry_unicode} Нет```'
         else:
             return f'```{emojis.white_check_mark_unicode}Есть```{self.bot.get_channel(self.db_guild.notify_channel).mention}'
-
-    async def set(self):
-        channels = [channel for channel in self.ctx.guild.channels if isinstance(channel, discord.TextChannel)]
-        await self.ctx.message.edit('\n'.join([channel.name for channel in channels]))
 
 
 class GMinVoiceTime(GProperty):

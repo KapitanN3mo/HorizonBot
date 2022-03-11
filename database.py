@@ -61,6 +61,12 @@ class User(BaseModel):
         )
 
 
+class MarryPartner(BaseModel):
+    user1 = peewee.ForeignKeyField(User, null=False)
+    user2 = peewee.ForeignKeyField(User, null=False)
+    date = peewee.TimestampField(null=False, default=dt.get_msk_datetime())
+
+
 class Task(BaseModel):
     task_id = peewee.AutoField(primary_key=True, column_name='task_id')
     owner_id = peewee.ForeignKeyField(User, null=False, column_name='owner_id')
@@ -84,16 +90,6 @@ class Warn(BaseModel):
 
     class Meta:
         table_name = 'warns'
-
-
-class PrivateChannel(BaseModel):
-    channel_id = peewee.BigIntegerField(primary_key=True, column_name='channel_id')
-    owner_id = peewee.ForeignKeyField(User, null=False, column_name='owner_id', to_field='user_db_id')
-    guild_id = peewee.ForeignKeyField(Guild, null=False, column_name='guild_id')
-
-    class Meta:
-        table_name = 'private_channels'
-
 
 class BotMessage(BaseModel):
     message_id = peewee.BigIntegerField(primary_key=True, column_name='message_id')
@@ -140,7 +136,7 @@ Guild.create_table()
 User.create_table()
 Warn.create_table()
 Task.create_table()
-PrivateChannel.create_table()
 BotMessage.create_table()
 Journal.create_table()
 ApiUser.create_table()
+MarryPartner.create_table()

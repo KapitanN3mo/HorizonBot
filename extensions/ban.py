@@ -1,5 +1,5 @@
-import discord
-from discord.ext import commands
+import disnake
+from disnake.ext import commands
 
 
 class BanModule(commands.Cog):
@@ -8,7 +8,7 @@ class BanModule(commands.Cog):
 
     @commands.has_permissions(ban_members=True)
     @commands.command()
-    async def ban(self, ctx, user: discord.Member, *, reason: str = ''):
+    async def ban(self, ctx, user: disnake.Member, *, reason: str = ''):
         if user == ctx.author:
             await ctx.send(':face_with_raised_eyebrow: `Ты чё, дурак что ли? Ты сам себя забанить решил? Молодец!`')
             return
@@ -16,14 +16,14 @@ class BanModule(commands.Cog):
             reason = 'Причина не указана'
         await user.ban(reason=reason)
         await ctx.send(f':white_check_mark: `Пользователь {user.display_name} забанен!`')
-        ban_emb = discord.Embed(title=f'Вы забанены на сервере {ctx.guild.name}',
-                                description=f'Администратор: {ctx.author.name}', colour=discord.Colour.red())
+        ban_emb = disnake.Embed(title=f'Вы забанены на сервере {ctx.guild.name}',
+                                description=f'Администратор: {ctx.author.name}', colour=disnake.Colour.red())
 
         await user.send(embed=ban_emb)
 
     @ban.error
     async def ban_error(self, ctx, error):
-        if isinstance(error.original, discord.errors.Forbidden):
+        if isinstance(error.original, disnake.errors.Forbidden):
             await ctx.send(f':sob: `Ой,я не могу забанить этого человека! Недостаточно прав!`')
         elif isinstance(error, commands.errors.CommandInvokeError):
             await ctx.send(f':exclamation:`Произошла внутренняя ошибка : {error}`')
@@ -39,8 +39,8 @@ class BanModule(commands.Cog):
                 user = banned_member.user
                 await ctx.guild.unban(user)
                 await ctx.send(f':ok_hand: Бан пользователя {user.name} будет снят!')
-                ban_emb = discord.Embed(title=f' Блокировка на сервере {ctx.guild.name} снята!',
-                                        description=f'Администратор: {ctx.author.name}', colour=discord.Colour.red)
+                ban_emb = disnake.Embed(title=f' Блокировка на сервере {ctx.guild.name} снята!',
+                                        description=f'Администратор: {ctx.author.name}', colour=disnake.Colour.red)
 
                 await user.send(embed=ban_emb)
 

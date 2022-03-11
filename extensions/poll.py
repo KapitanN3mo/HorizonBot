@@ -1,9 +1,8 @@
-import discord
-from discord.ext import commands
+import disnake
+from disnake.ext import commands
 import json
-import dt
+import datetime
 import random
-from discord_components import Button, ButtonStyle
 import math
 import asyncio
 
@@ -17,7 +16,7 @@ class PollModule(commands.Cog):
 
     @commands.command()
     @admin_permission_required
-    async def create_poll(self, ctx, channel: discord.TextChannel, *, poll_info: str):
+    async def create_poll(self, ctx, channel: disnake.TextChannel, *, poll_info: str):
         poll_info = json.loads(poll_info)
         poll_variants = poll_info['variants']
         poll_time = poll_info['time']
@@ -29,7 +28,7 @@ class PollModule(commands.Cog):
             emoji = variant['emoji']
             reaction_list.append(emoji)
             poll_body += f'{emoji} - {text}\n'
-        embed = discord.Embed(title='Голосование', colour=discord.Colour.random(), description=poll_body)
+        embed = disnake.Embed(title='Голосование', colour=disnake.Colour.random(), description=poll_body)
         if poll_author in ['True', 'true']:
             author = ctx.message.author
             embed.set_author(name=author, icon_url=author.avatar_url)
@@ -58,8 +57,8 @@ class PollModule(commands.Cog):
                 await confirm_response.respond(content='ОК :ok_hand:')
                 await asyncio.sleep(delay)
                 poll_report = ''
-                message = discord.utils.get(self.bot.cached_messages, id=message.id)
-                emb = discord.Embed(title=f'Результат опроса #{poll_id}', colour=discord.Colour.random())
+                message = disnake.utils.get(self.bot.cached_messages, id=message.id)
+                emb = disnake.Embed(title=f'Результат опроса #{poll_id}', colour=disnake.Colour.random())
                 for react in message.reactions:
                     poll_text = 'Текст не найден'
                     for var in poll_variants:

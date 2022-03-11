@@ -1,5 +1,5 @@
-import discord
-from discord.ext import commands
+import disnake
+from disnake.ext import commands
 
 
 class KickModule(commands.Cog):
@@ -8,7 +8,7 @@ class KickModule(commands.Cog):
 
     @commands.has_permissions(kick_members=True)
     @commands.command()
-    async def kick(self, ctx, user: discord.Member, *reason):
+    async def kick(self, ctx, user: disnake.Member, *reason):
         if user == ctx.author:
             await ctx.send(':face_with_raised_eyebrow: `Ты чё, дурак что ли? Ты сам себя выгнать решил? Молодец!`')
             return

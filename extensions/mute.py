@@ -1,5 +1,5 @@
-import discord
-from discord.ext import commands
+import disnake
+from disnake.ext import commands
 import asyncio
 
 import database
@@ -11,13 +11,13 @@ class MuteModule(commands.Cog):
 
     @commands.has_permissions(kick_members=True)
     @commands.command()
-    async def mute(self, ctx, user: discord.Member, time: float):
+    async def mute(self, ctx, user: disnake.Member, time: float):
         try:
             target_guild = database.Guild.get_or_none(database.Guild.guild_id == ctx.guild.id)
             if target_guild.mute_role is None:
                 await ctx.send('`Для сервера не настроена роль для мута`')
                 return
-            mute_role = discord.utils.get(ctx.guild.roles, id=target_guild.mute_role)
+            mute_role = disnake.utils.get(ctx.guild.roles, id=target_guild.mute_role)
             if mute_role is None:
                 await ctx.send('`Роль для мута настроена, однако найти её на сервере не удалось!`')
                 return
@@ -29,19 +29,19 @@ class MuteModule(commands.Cog):
 
     @commands.has_permissions(kick_members=True)
     @commands.command()
-    async def unmute(self, ctx, user: discord.Member):
+    async def unmute(self, ctx, user: disnake.Member):
         target_guild = database.Guild.get_or_none(database.Guild.guild_id == ctx.guild.id)
         if target_guild is None:
             await ctx.send('`Для сервера не настроена роль для мута`')
             return
-        mute_role = discord.utils.get(ctx.guild.roles, id=target_guild.mute_role)
+        mute_role = disnake.utils.get(ctx.guild.roles, id=target_guild.mute_role)
         if mute_role is None:
             await ctx.send('`Роль для мута настроена, однако найти её на сервере не удалось!`')
             return
         await user.remove_role(mute_role)
         await ctx.send(f':kissing_closed_eyes:`Товарищ {user.mention} помилован! Веди себя хорошо!`')
 
-    async def automatic_unmute(self, user: discord.Member, mute_role: discord.Role, time: float, ctx):
+    async def automatic_unmute(self, user: disnake.Member, mute_role: disnake.Role, time: float, ctx):
         await asyncio.sleep(time * 60)
         await user.remove_roles(mute_role)
         await ctx.send(f':kissing_closed_eyes:`Товарищ {user.mention} помилован! Веди себя хорошо!`')

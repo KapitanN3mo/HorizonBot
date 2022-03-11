@@ -1,10 +1,49 @@
 import json
-import discord
-from discord.ext import commands
+import disnake
+from disnake.ext import commands
 import database
+import dt
 from dt import get_msk_datetime
 from assets import emojis
 from permissions import admin_permission_required
+
+
+class VoiceJournal:
+    _journals = []
+
+    def __init__(self, member: disnake.Member):
+        self.member = member
+        self.history = []
+        self._journals.append(self)
+
+    @classmethod
+    def _find_journal(cls, member: disnake.Member):
+        for j in cls._journals:
+            if member.id == j.member.id and member.guild.id == j.member.guild.id:
+                return j
+        else:
+            return None
+
+    @classmethod
+    def add_row(cls, event, member: disnake.Member, xp: int):
+        journal: VoiceJournal = cls._find_journal(member)
+        if journal is None:
+            return
+        journal.history.append({'event': event, 'timestamp': dt.get_msk_datetime(), 'xp': xp})
+
+    def pretty_print(self):
+        emb = disnake.Embed(title='Журнал голосового канала', color=disnake.Colour(0xB0C4DE))
+        for row in self.history:
+            event = row.get('event')
+            xp = row.get('event')
+            if event == 'mute':
+                emoji = '🔕'
+            elif event == 'leave':
+                emoji = '🔌'
+            else:
+                emoji = '♦'
+            emb.description += f'{emoji} {xp}'
+        return emb
 
 
 class VoiceModule(commands.Cog):
@@ -14,8 +53,11 @@ class VoiceModule(commands.Cog):
 
     @commands.command()
     @admin_permission_required
-    async def enable_private_voice(self, ctx: commands.Context, *, name):
+    async def enable_private_voice(self, ctx: commands.Context, *, name=''):
         db_guild = database.Guild.get_or_none(database.Guild.guild_id == ctx.guild.id)
+        if name == '':
+            await ctx.send(f'{emojis.exclamation}`Укажите имя канала`')
+            return
         if db_guild is None:
             return
         if db_guild.private_voice is None:
@@ -36,14 +78,18 @@ class VoiceModule(commands.Cog):
         if db_guild is None:
             return
         if db_guild.private_voice is not None:
-            p_channels = database.PrivateChannel.select().where(database.PrivateChannel.guild_id == ctx.guild.id)
-            for p_channel in p_channels:
-                channel = ctx.guild.get_channel(p_channel.channel_id)
+            create_channel: disnake.VoiceChannel = ctx.guild.get_channel(db_guild.private_voice)
+            if create_channel is None:
+                await ctx.send(
+                    f'{emojis.exclamation}` Не удалось найти канал. Возможно он был удалён вручную. Данные очищены.`')
+                db_guild.private_voice = None
+                db_guild.save()
+                return
+            for channel in create_channel.category.channels:
                 try:
                     await channel.delete()
                 except Exception as ex:
-                    print(ex)
-            create_channel = ctx.guild.get_channel(db_guild.private_voice)
+                    pass
             category = create_channel.category
             if category is not None:
                 await category.delete()
@@ -57,91 +103,101 @@ class VoiceModule(commands.Cog):
         else:
             await ctx.send(f'{emojis.exclamation}`Приватные каналы уже отключены!`')
 
-    @commands.Cog.listener()
-    async def on_voice_state_update(self, member: discord.Member, before: discord.VoiceState,
-                                    after: discord.VoiceState):
-        db_guild = database.Guild.get_or_none(database.Guild.guild_id == member.guild.id)
-        db_user = database.User.get_or_none(database.User.user_id == member.id)
-        if db_user is None:
+    @classmethod
+    async def check_to_delete_private(cls, channel: disnake.VoiceChannel):
+        db_guild: database.Guild = database.Guild.get_or_none(database.Guild.guild_id == channel.guild.id)
+        if db_guild.private_voice is None:
             return
-        if before.channel is None and after.channel is not None:
-            db_user.voice_entry = get_msk_datetime()
-            db_user.save()
-            if after.channel.id == db_guild.private_voice:
-                print(f'Create private from {member.name}')
-                category = after.channel.category
-                private_channel = await category.create_voice_channel(name=member.display_name,
-                                                                      reason=f'Приватный канал по запросу {member.display_name}')
-                overwrite = discord.PermissionOverwrite()
-                overwrite.manage_channels = True
-                await private_channel.set_permissions(member, overwrite=overwrite)
-                database.PrivateChannel.insert(channel_id=private_channel.id,
-                                               owner_id=database.User.get(database.User.user_id == member.id,
-                                                                          database.User.guild_id == member.guild.id),
-                                               guild_id=member.guild.id).execute()
-                await member.move_to(private_channel)
+        if channel.id == db_guild.private_voice:
+            return
+        ds_create_channel: disnake.VoiceChannel = channel.guild.get_channel(db_guild.private_voice)
+        if channel.category.id == ds_create_channel.category.id:
+            if len(channel.members) == 0:
+                try:
+                    await channel.delete()
+                except:
+                    pass
 
-        if before.channel is not None and after.channel is None:
-            entry_time = db_user.voice_entry
-            user = database.User.get_or_none(database.User.user_id == member.id,
-                                             database.User.guild_id == member.guild.id)
-            if user is None:
-                return
-            duration = (get_msk_datetime() - entry_time).seconds
-            if duration > db_guild.minimum_voice_time:
-                total_time = user.in_voice_time + duration
-                user.in_voice_time = total_time
-                voice_xp = (duration // 60) * db_guild.xp_voice_multiplier
-            else:
-                voice_xp = 0
-            total_xp = user.xp + voice_xp
-            user.xp = total_xp
-            user.save()
-            sys_info = json.loads(db_user.sys_info)
-            if sys_info['send_dm_voice'] == 'true':
-                hours = duration // 3600
-                minutes = (duration - (hours * 3600)) // 60
-                await member.send(embed=discord.Embed(title='Начисление опыта', colour=discord.Color.random(),
-                                                      description=f'Вы общались {hours} часов {minutes} минут. '
-                                                                  f'Начислен опыт: {voice_xp} очков'))
-            db_private_channel = database.PrivateChannel.get_or_none(
-                database.PrivateChannel.channel_id == before.channel.id)
-            if db_private_channel is not None:
-                clients = before.channel.members
-                if not clients:
-                    owner_name = discord.utils.get(before.channel.guild.members,
-                                                   id=db_private_channel.owner_id.user_id)
-                    print(f'Remove empty private channel. Owner {owner_name}')
-                    try:
-                        await before.channel.delete(reason='Автоудаление пустого приватного канала')
-                    except:
-                        pass
-                    db_private_channel.delete_instance()
-        if before.channel is not None and after.channel is not None:
-            if after.channel.id == db_guild.private_voice:
-                print(f'Create private from {member.name}')
-                category = after.channel.category
-                private_channel = await category.create_voice_channel(name=member.display_name,
-                                                                      reason=f'Приватный канал по запросу {member.display_name}')
-                overwrite = discord.PermissionOverwrite()
-                overwrite.manage_channels = True
-                await private_channel.set_permissions(member, overwrite=overwrite)
-                db_private_channel = database.PrivateChannel()
-                db_private_channel.channel_id = private_channel
-                db_private_channel.owner_id = member.id
-                db_private_channel.guild_id = member.guild.id
-                db_private_channel.save()
-                await member.move_to(private_channel)
-            db_private_channel = database.PrivateChannel.get_or_none(
-                database.PrivateChannel.channel_id == before.channel.id)
-            if db_private_channel is not None:
-                clients = before.channel.members
-                if not clients:
-                    owner_name = discord.utils.get(before.channel.guild.members,
-                                                   id=db_private_channel.owner_id)
-                    print(f'Remove empty private channel. Owner {owner_name}')
-                    await before.channel.delete(reason='Автоудаление пустого приватного канала')
-                    db_private_channel.delete_instance()
+    @classmethod
+    async def create_private_voice(cls, member: disnake.Member, channel: disnake.VoiceChannel):
+        db_guild: database.Guild = database.Guild.get_or_none(database.Guild.guild_id == member.guild.id)
+        if channel is None:
+            return
+        if db_guild.private_voice is None:
+            return
+        if channel.id == db_guild.private_voice:
+            overwrite = disnake.PermissionOverwrite()
+            overwrite.manage_channels = True
+            pr = {
+                member: overwrite
+            }
+            ch = await channel.category.create_voice_channel(member.display_name, overwrites=pr)
+            await member.move_to(ch)
+
+    @commands.Cog.listener()
+    async def on_voice_state_update(self, member: disnake.Member, before: disnake.VoiceState,
+                                    after: disnake.VoiceState):
+        if before.channel is None and after.channel is not None:
+            await connect_channel(member, after)
+        elif before.channel is not None and after.channel is None:
+            await leave_channel(member, before)
+        elif before.channel is not None and after.channel is not None and before.channel.id != after.channel.id:
+            await change_channel(member, before, after)
+        elif before.channel.id == after.channel.id:
+            if not (before.self_mute and before.mute) and (after.self_mute or after.mute):
+                await mute(member, before, after)
+            elif (before.self_mute or before.mute) and not (after.self_mute and after.mute):
+                await unmute(member, before, after)
+
+
+async def mute(member, before, after):
+    await add_xp_by_voice_time(member)
+
+
+async def unmute(member, before, after):
+    await set_entry_voice_time(member)
+
+
+async def connect_channel(member, after):
+    if after.mute or after.self_mute:
+        return
+    await set_entry_voice_time(member)
+    await VoiceModule.create_private_voice(member, after.channel)
+
+
+async def change_channel(member, before, after):
+    await VoiceModule.create_private_voice(member, after.channel)
+    await VoiceModule.check_to_delete_private(before.channel)
+
+
+async def leave_channel(member, before):
+    await add_xp_by_voice_time(member)
+    await VoiceModule.check_to_delete_private(before.channel)
+
+
+async def set_entry_voice_time(member: disnake.Member):
+    db_user: database.User = database.User.get_or_none(database.User.user_id == member.id,
+                                                       database.User.guild_id == member.guild.id)
+    if db_user is None:
+        return
+    db_user.voice_entry = dt.get_msk_datetime()
+    db_user.save()
+
+
+async def add_xp_by_voice_time(member: disnake.Member):
+    db_user: database.User = database.User.get_or_none(database.User.user_id == member.id,
+                                                       database.User.guild_id == member.guild.id)
+    if db_user is None:
+        return
+    if db_user.voice_entry is None:
+        return
+    voice_time = (dt.get_msk_datetime() - db_user.voice_entry)
+    if voice_time.seconds <= db_user.guild_id.minimum_voice_time:
+        return
+    xp = int(voice_time.seconds * db_user.guild_id.xp_voice_multiplier)
+    db_user.in_voice_time += voice_time.seconds
+    db_user.xp += xp
+    db_user.save()
 
 
 def setup(bot):

@@ -4,8 +4,8 @@ from dt import *
 import traceback
 import json
 import database
-import discord
-from discord.ext import commands
+import disnake
+from disnake.ext import commands
 from dt import get_msk_datetime
 import asyncio
 import random
@@ -18,7 +18,7 @@ class Raffle(commands.Cog):
 
     @commands.command()
     @admin_permission_required
-    async def create_raffle(self, ctx: commands.Context, channel: discord.TextChannel, *, data: str):
+    async def create_raffle(self, ctx: commands.Context, channel: disnake.TextChannel, *, data: str):
         try:
             data = json.loads(data)
         except json.JSONDecodeError:
@@ -51,7 +51,7 @@ class RaffleMessage:
     def __init__(self, bot: commands.Bot, text=None, winner_count=None,
                  emoji=None, date=None, send_channel=None, info_channel=None, author=None):
         self.bot = bot
-        print(author)
+        #print(author)
         self.show_author = False if author is None else True
         self.text = text
         self.winner_count = winner_count
@@ -64,8 +64,8 @@ class RaffleMessage:
         self.db_message = None
 
     async def send(self):
-        emb = discord.Embed(title="Внимание розыгрыш!", description=self.text,
-                            colour=discord.Colour.random())
+        emb = disnake.Embed(title="Внимание розыгрыш!", description=self.text,
+                            colour=disnake.Colour.random())
         emb.add_field(name='Количество победителей: ', value=self.winner_count)
         if self.show_author:
             emb.set_author(name=self.author.name, icon_url=self.author.avatar_url)
@@ -121,7 +121,7 @@ class RaffleMessage:
             except IndexError:
                 await self.info_channel.send(
                     ":disappointed_relieved: `К сожалению, участников недостаточно! Розыгрыш отменён!`")
-                emb = discord.Embed(title='Розыгрыш отменён!', colour=discord.Colour.dark_gold(),
+                emb = disnake.Embed(title='Розыгрыш отменён!', colour=disnake.Colour.dark_gold(),
                                     description='К сожалению, участников недостаточно!')
                 emb.set_footer(text=f'Самые честные розыгрыши от HorizonBot!',
                                icon_url=self.bot.user.avatar_url)
@@ -131,10 +131,10 @@ class RaffleMessage:
             participants.remove(winner)
         guild_names = []
         for winner in winners:
-            name = discord.utils.get(message.guild.members, id=winner.id)
+            name = disnake.utils.get(message.guild.members, id=winner.id)
             guild_names.append(name)
-        emb = discord.Embed(title="Поздравляем победителя!",
-                            colour=discord.Colour.magenta(), description=self.text)
+        emb = disnake.Embed(title="Поздравляем победителя!",
+                            colour=disnake.Colour.magenta(), description=self.text)
         emb.add_field(name='Количество победителей: ', value=self.winner_count)
         if self.show_author:
             emb.set_author(name=self.author.name, icon_url=self.author.avatar_url)
@@ -142,7 +142,7 @@ class RaffleMessage:
                        icon_url=self.bot.user.avatar_url)
         emb.add_field(name='Окончание в: ', value=f'{self.date.strftime("%m-%d-%H-%M")}', inline=False)
         emb.add_field(name='Победители:' if self.winner_count > 1 else "Победитель:", inline=False,
-                      value="\n".join(name.display_name for name in guild_names if isinstance(name, discord.Member)))
+                      value="\n".join(name.display_name for name in guild_names if isinstance(name, disnake.Member)))
         await self.info_channel.send(embed=emb)
         await message.edit(embed=emb)
 
@@ -164,7 +164,7 @@ async def restore(db_message: database.BotMessage):
     message = await send_channel.fetch_message(db_message.message_id)
     if show_author:
         guild = message.guild
-        author = discord.utils.get(guild.members, id=db_message.owner_id)
+        author = disnake.utils.get(guild.members, id=db_message.owner_id)
     else:
         author = None
     rf = RaffleMessage(bot, text, winner_count, emoji, date, send_channel, info_channel, author)

@@ -1,10 +1,11 @@
 import json
-import discord
-from discord.ext import commands
+import disnake
+from disnake.ext import commands
+import core
 import database
 from dt import datetime_format
-import dt
-from core import Bot
+import datetime
+from core.lib import pr_properties
 
 default_sys_info = {
     'send_dm_voice': False
@@ -21,45 +22,40 @@ class ProfileModule(commands.Cog):
         users = database.User.select().where(database.User.guild_id == ctx.guild.id) \
             .order_by(-database.User.xp) \
             .limit(20)
-        emb = discord.Embed(title='', color=discord.Colour(0xD1C300), description='')
-        emb.set_footer(text=f'Центр статистики имени {self.bot.user.name}', icon_url=self.bot.user.avatar_url)
-        emb.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
+        emb = disnake.Embed(title='ТОП-20', color=disnake.Colour(0xFF9CFF), description='')
+        emb.set_footer(text=f'Центр статистики имени {self.bot.user.name}', icon_url=self.bot.user.display_avatar.url)
         counter = 1
         for user in users:
             ds_user = self.bot.get_user(user.user_id)
-            emb.description += f'**[{counter}]**:{ds_user.mention} - {user.xp} xp\n'
+            if counter == 1:
+                emb.description += "🥇"
+            elif counter == 2:
+                emb.description += "🥈"
+            elif counter == 3:
+                emb.description += "🥉"
+            else:
+                emb.description += "🎖"
+            emb.description += f'[`{counter}`]:{ds_user.mention} - `{user.xp}`\n'
             counter += 1
         await ctx.send(embed=emb)
 
     @commands.command()
-    async def profile(self, ctx: commands.Context, user: discord.Member or None = None):
+    async def profile(self, ctx: commands.Context, user: disnake.Member or None = None):
         if user == self.bot.user:
             await ctx.send('🕵️ `Информация находиться под грифом "Перед прочтением съесть!".... Съел!`')
             return
         if user is None:
             user = ctx.author
-        user_data = database.User.select().where(database.User.user_id == user.id,
-                                                 database.User.guild_id == ctx.guild.id).get_or_none()
-        if user_data is None:
-            await ctx.send('Это ваше первое сообщение! Ваш профиль создан!')
-        else:
-            warns_count = len(
-                database.Warn.select().where(database.Warn.user_id == user.id, database.Warn.guild_id == ctx.guild.id))
-            embed = discord.Embed(title=' ', colour=user.colour, description=user.mention)
-            embed.add_field(name='Количество сообщений', value=user_data.message_count)
-            embed.add_field(name='Очки опыта', value=user_data.xp)
-            embed.add_field(name='Время в голосовом канале', value=f'{user_data.in_voice_time // 60} минут')
-            join_datetime = user.joined_at
-            embed.add_field(name='Появился на сервере',
-                            value=f'{join_datetime.strftime(datetime_format)} ({(datetime.datetime.now() - join_datetime).days} дней назад)')
-            embed.add_field(name='Предупреждения', value=f'{warns_count}/3')
-            embed.set_author(name=user.name, icon_url=user.avatar_url)
-            embed.set_thumbnail(url=user.avatar_url)
-            await ctx.send(embed=embed)
+        embed = disnake.Embed(title=' ', colour=user.colour, description=user.mention)
+        for pr in pr_properties.get_profile_properties(ctx, user):
+            embed.add_field(name=pr.name, value=pr.out(),inline=pr.inline)
+        embed.set_author(name=user.display_name, icon_url=user.display_avatar.url)
+        embed.set_thumbnail(url=user.display_avatar.url)
+        await ctx.send(embed=embed)
 
     @classmethod
-    def update_xp(cls, user: discord.Member, xp: int):
-        bot = Bot.get_bot()
+    def update_xp(cls, user: disnake.Member, xp: int):
+        bot = core.Bot.get_bot()
         try:
             if user.id == bot.user.id:
                 return
@@ -76,8 +72,8 @@ class ProfileModule(commands.Cog):
         user_data.save()
 
     @classmethod
-    def update_messages_count(cls, user: discord.Member, msg: int):
-        bot = Bot.get_bot()
+    def update_messages_count(cls, user: disnake.Member, msg: int):
+        bot = core.Bot.get_bot()
         if user.id == bot.user.id:
             return
         try:
@@ -94,7 +90,7 @@ class ProfileModule(commands.Cog):
         user_data.save()
 
     @classmethod
-    def create_profile(cls, user: discord.Member):
+    def create_profile(cls, user: disnake.Member):
         try:
             database.User.insert(user_id=user.id,
                                  guild_id=user.guild.id,
@@ -108,7 +104,7 @@ class ProfileModule(commands.Cog):
             return 0
 
     @classmethod
-    def create_guild_profile(cls, guild: discord.Guild):
+    def create_guild_profile(cls, guild: disnake.Guild):
         try:
             database.Guild.insert(guild_id=guild.id,
                                   admins=json.dumps([])).execute()

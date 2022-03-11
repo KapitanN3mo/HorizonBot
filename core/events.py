@@ -1,5 +1,5 @@
-import discord
-from discord.ext import commands
+import disnake
+from disnake.ext import commands
 from core import profile
 
 
@@ -7,6 +7,7 @@ class Events(commands.Cog):
     hooks = {}
     tasks = []
     links = {}
+    task_buffer = []
 
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -37,12 +38,10 @@ class Events(commands.Cog):
 
     @classmethod
     def disconnect_events(cls, obj):
-        print(cls.hooks)
         for hook in cls.hooks:
             for link in cls.hooks[hook]:
-                print(link, hook)
                 if obj == link:
-                    cls.hooks[hook].pop(link)
+                    cls.hooks[hook].pop(cls.hooks[hook].index(obj))
 
     @commands.Cog.listener()
     async def on_raw_reaction_remove(self, payload):
@@ -69,14 +68,14 @@ class Events(commands.Cog):
             cls.hooks['on_member_join'].append(hook)
 
     @commands.Cog.listener()
-    async def on_guild_join(self, guild: discord.Guild):
+    async def on_guild_join(self, guild: disnake.Guild):
         profile.ProfileModule.create_guild_profile(guild)
         if 'on_guild_join' in self.hooks:
             for hook in self.hooks['on_guild_join']:
                 self.bot.loop.create_task(hook(guild))
 
     @commands.Cog.listener()
-    async def on_member_join(self, member: discord.Member):
+    async def on_member_join(self, member: disnake.Member):
         profile.ProfileModule.create_profile(member)
         if 'on_member_join' in self.hooks:
             for hook in self.hooks['on_member_join']:
@@ -105,10 +104,10 @@ class Events(commands.Cog):
         cls.tasks.append(task)
 
     @commands.Cog.listener()
-    async def on_message(self, message: discord.Message):
+    async def on_message(self, message: disnake.Message):
         if 'on_message' in self.hooks:
             for hook in self.hooks['on_message']:
-                self.bot.loop.create_task(hook(message))
+                self.task_buffer.append(self.bot.loop.create_task(hook(message)))
 
     @commands.Cog.listener()
     async def on_ready(self):

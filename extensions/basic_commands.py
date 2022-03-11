@@ -1,5 +1,5 @@
-import discord
-from discord.ext import commands
+import disnake
+from disnake.ext import commands
 import permissions
 
 
@@ -9,8 +9,8 @@ class BasicCommands(commands.Cog):
 
     @commands.command()
     @permissions.admin_permission_required
-    async def send(self, ctx, channel: discord.TextChannel, *, message: str):
-        print(message)
+    async def send(self, ctx, channel: disnake.TextChannel, *, message: str):
+        #print(message)
         await channel.send(content=message)
 
 
