@@ -9,7 +9,10 @@ from assets import emojis
 def admin_permission_required(func):
     @wraps(func)
     async def wrapper(*args, **kwargs):
-        ctx: commands.Context = args[1]
+        try:
+            ctx: commands.Context = args[1]
+        except IndexError:
+            ctx: disnake.CommandInteraction = kwargs['inter']
         user: disnake.User = ctx.author
         guild: disnake.Guild = ctx.guild
         member: disnake.Member = disnake.utils.get(guild.members, id=user.id)

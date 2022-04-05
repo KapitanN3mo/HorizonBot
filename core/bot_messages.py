@@ -9,7 +9,7 @@ class Restorer(commands.Cog):
 
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        Events.add_task(self.restore)
+        # Events.add_task(self.restore)
 
     async def restore(self):
         messages = database.BotMessage.select()

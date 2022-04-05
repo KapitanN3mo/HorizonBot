@@ -7,5 +7,11 @@
     "debug": "OTA0NjgyNDczODE5MDkxMDE1.YX_FNQ.SrvcnvHpn89ApuWRJ1Uyh0SZTLs"
   },
   "dev_id": 357283670047850497,
-  "developers": ["357283670047850497"]
+  "developers": [
+    "357283670047850497"
+  ],
+  "api": {
+    "host": "127.0.0.1",
+    "port": "7899"
+  }
 }

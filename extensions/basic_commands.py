@@ -10,9 +10,10 @@ class BasicCommands(commands.Cog):
     @commands.command()
     @permissions.admin_permission_required
     async def send(self, ctx, channel: disnake.TextChannel, *, message: str):
-        #print(message)
+        # print(message)
         await channel.send(content=message)
 
 
 def setup(bot: commands.Bot):
-    bot.add_cog(BasicCommands(bot))
+    pass
+    # bot.add_cog(BasicCommands(bot))
