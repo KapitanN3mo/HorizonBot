@@ -4,16 +4,15 @@ import peewee
 import dt
 
 pf = platform.system()
-if pf == 'Windows':
-    db = peewee.PostgresqlDatabase(host='127.0.0.1',
-                                   port=5432,
-                                   database='horizon_bot',
-                                   user='HorizonBot',
-                                   password='s24d300')
 
-else:
-    DATABASE_URL = os.environ['DATABASE_URL']
-    db = peewee.PostgresqlDatabase(DATABASE_URL, sslmode='require')
+db = peewee.PostgresqlDatabase(host='127.0.0.1',
+                               port=5432,
+                               database='horizon_bot',
+                               user='horizon_bot',
+                               password='s24d300')
+
+# DATABASE_URL = os.environ['DATABASE_URL']
+# db = peewee.PostgresqlDatabase(DATABASE_URL, sslmode='require')
 db.autorollback = True
 
 
