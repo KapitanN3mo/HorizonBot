@@ -27,15 +27,12 @@ class Guild(BaseModel):
     admins = peewee.TextField(null=False)
     rules = peewee.TextField(null=True)
     notify_channel = peewee.BigIntegerField(null=True)
+    clan_channel = peewee.BigIntegerField(null=True)
     bot_channel = peewee.BigIntegerField(null=True)
-    role_channel = peewee.BigIntegerField(null=True)
-    mute_role = peewee.BigIntegerField(null=True)
     private_voice = peewee.BigIntegerField(null=True)
     minimum_voice_time = peewee.IntegerField(null=False, default=10)
     xp_voice_multiplier = peewee.FloatField(null=False, default=1)
     xp_message_multiplier = peewee.FloatField(null=False, default=1)
-    statistics_category = peewee.BigIntegerField(null=True)
-    statistics_info = peewee.TextField(null=True)
     day_message = peewee.IntegerField(null=True)
     webhook = peewee.TextField(null=True)
 
@@ -61,9 +58,10 @@ class User(BaseModel):
 class RoleBlock(BaseModel):
     block_id = peewee.AutoField(primary_key=True)
     name = peewee.TextField(null=False)
-    color = peewee.TextField(null=False)
+    color = peewee.IntegerField(null=False)
     style = peewee.TextField(null=True)
     guild = peewee.ForeignKeyField(Guild, null=False)
+    block_channel_id = peewee.BigIntegerField(null=True)
     block_message_id = peewee.BigIntegerField(null=True, unique=True)
 
 
@@ -71,9 +69,9 @@ class Role(BaseModel):
     role_id = peewee.BigIntegerField(primary_key=True)
     guild = peewee.ForeignKeyField(Guild, null=False)
     name = peewee.TextField(null=False)
-    linked_block = peewee.ForeignKeyField(RoleBlock, null=True)
+    linked_block = peewee.ForeignKeyField(RoleBlock, null=False)
     color = peewee.TextField(null=False)
-    custom_emoji = peewee.TextField(null=True)
+    emoji = peewee.TextField(null=True)
     having_users = peewee.TextField(null=False)
 
 
@@ -113,6 +111,33 @@ class FunData(BaseModel):
     data = peewee.TextField(null=False)
 
 
+class Clan(BaseModel):
+    clan_id = peewee.AutoField(primary_key=True)
+    guild = peewee.ForeignKeyField(Guild, null=False)
+    owner = peewee.ForeignKeyField(User, null=False)
+    name = peewee.TextField(null=False, unique=True)
+    tag = peewee.TextField(null=False, unique=True)
+    color = peewee.IntegerField(null=False)
+    description = peewee.TextField(null=False)
+    emblem = peewee.TextField(null=False)
+    created_date = peewee.TimestampField(default=dt.get_msk_datetime(), null=False)
+    level = peewee.IntegerField(null=False, default=0)
+    verify = peewee.BooleanField(null=False, default=False)
+    verify_issuing = peewee.ForeignKeyField(User, null=True)
+
+
+class Inventory(BaseModel):
+    item_id = peewee.TextField(null=False)
+    count = peewee.IntegerField(null=False)
+    clan = peewee.ForeignKeyField(Clan, null=False)
+
+
+class ClanMember(BaseModel):
+    user = peewee.ForeignKeyField(User, primary_key=True)
+    clan = peewee.ForeignKeyField(Clan, null=False)
+    class_ = peewee.TextField(null=False)
+
+
 Guild.create_table()
 User.create_table()
 Warn.create_table()
@@ -121,3 +146,5 @@ ApiUser.create_table()
 MarryPartner.create_table()
 RoleBlock.create_table()
 Role.create_table()
+Clan.create_table()
+ClanMember.create_table()

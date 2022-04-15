@@ -17,9 +17,10 @@ class ProfileModule(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @commands.command()
-    async def top(self, ctx: commands.Context):
-        users = database.User.select().where(database.User.guild_id == ctx.guild.id) \
+    @commands.slash_command()
+    async def top(self, inter: disnake.CommandInteraction):
+        """Самые крутые обитают здесь!"""
+        users = database.User.select().where(database.User.guild_id == inter.guild.id) \
             .order_by(-database.User.xp) \
             .limit(20)
         emb = disnake.Embed(title='ТОП-20', color=disnake.Colour(0xFF9CFF), description='')
@@ -37,21 +38,22 @@ class ProfileModule(commands.Cog):
                 emb.description += "🎖"
             emb.description += f'[`{counter}`]:{ds_user.mention} - `{user.xp}`\n'
             counter += 1
-        await ctx.send(embed=emb)
+        await inter.send(embed=emb)
 
-    @commands.command()
-    async def profile(self, ctx: commands.Context, user: disnake.Member or None = None):
+    @commands.slash_command()
+    async def profile(self, inter: disnake.CommandInteraction, user: disnake.Member = None):
+        """Информация о тебе, солнце!"""
         if user == self.bot.user:
-            await ctx.send('🕵️ `Информация находиться под грифом "Перед прочтением съесть!".... Съел!`')
+            await inter.send('🕵️ `Информация находиться под грифом "Перед прочтением съесть!".... Съел!`')
             return
         if user is None:
-            user = ctx.author
+            user = inter.author
         embed = disnake.Embed(title=' ', colour=user.colour, description=user.mention)
-        for pr in pr_properties.get_profile_properties(ctx, user):
-            embed.add_field(name=pr.name, value=pr.out(),inline=pr.inline)
+        for pr in pr_properties.get_profile_properties(inter, user):
+            embed.add_field(name=pr.name, value=pr.out(), inline=pr.inline)
         embed.set_author(name=user.display_name, icon_url=user.display_avatar.url)
         embed.set_thumbnail(url=user.display_avatar.url)
-        await ctx.send(embed=embed)
+        await inter.send(embed=embed)
 
     @classmethod
     def update_xp(cls, user: disnake.Member, xp: int):

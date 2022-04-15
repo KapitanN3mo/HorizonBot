@@ -52,18 +52,18 @@ class WarnModule(commands.Cog):
             except disnake.errors.Forbidden:
                 await channel.send(f':sob: `Недостаточно прав! Не могу забанить {user.name}`')
 
-    @commands.command()
+    @commands.slash_command()
     @admin_permission_required
-    async def warn(self, ctx: commands.Context, user: disnake.User, expiration: int, *, reason: str):
+    async def warn(self, inter: disnake.CommandInteraction, user: disnake.User, expiration: int, reason: str):
         try:
             db_user = database.User.get_or_none(database.User.user_id == user.id,
-                                                database.User.guild_id == ctx.guild.id)
-            db_author = database.User.get_or_none(database.User.user_id == ctx.author.id,
-                                                  database.User.guild_id == ctx.guild.id)
+                                                database.User.guild_id == inter.guild.id)
+            db_author = database.User.get_or_none(database.User.user_id == inter.author.id,
+                                                  database.User.guild_id == inter.guild.id)
             if db_user is None:
                 return
             warn = database.Warn()
-            warn.guild_id = ctx.guild.id
+            warn.guild_id = inter.guild.id
             warn.user_db_id = db_user.user_db_id
             warn.owner_id = db_author.user_db_id
             warn.reason = reason
@@ -72,29 +72,29 @@ class WarnModule(commands.Cog):
             warn.save()
         except Exception as ex:
             print(traceback.print_exc())
-        user_db = database.User.get_or_none(database.User.user_id == user.id, database.User.guild_id == ctx.guild.id)
+        user_db = database.User.get_or_none(database.User.user_id == user.id, database.User.guild_id == inter.guild.id)
         warns_count = len(
-            database.Warn.select().where(database.Warn.user_db_id == user_db, database.Warn.guild_id == ctx.guild.id))
+            database.Warn.select().where(database.Warn.user_db_id == user_db, database.Warn.guild_id == inter.guild.id))
         embed = disnake.Embed(title=f'Выдано предупреждение!', colour=disnake.Colour.red())
         embed.add_field(name='Кому:', value=user.mention)
         embed.add_field(name='Причина:', value=reason)
-        embed.add_field(name='Выдан:', value=ctx.author.mention)
+        embed.add_field(name='Выдан:', value=inter.author.mention)
         embed.add_field(name='Количество:', value=f'{warns_count}/3')
         embed.add_field(name='Срок истечения:', value=str(expiration))
-        embed.set_author(name=ctx.author.name, icon_url=ctx.author.display_avatar.url)
+        embed.set_author(name=inter.author.name, icon_url=inter.author.display_avatar.url)
         embed.set_footer(text=get_str_msk_datetime())
-        await ctx.send(embed=embed)
+        await inter.send(embed=embed)
         if warns_count >= 3:
             embed = disnake.Embed(title='Автоматический бан',
                                   description=f'Пользователь {user.name} ({user.mention}) был забанен, так как получил 3 варна!',
                                   colour=0x000000)
-            member = disnake.utils.get(ctx.guild.members, id=user.id)
-            await ctx.send(embed=embed)
+            member = disnake.utils.get(inter.guild.members, id=user.id)
+            await inter.send(embed=embed)
             await asyncio.sleep(5)
             try:
                 await member.ban(reason='Автоматический бан за 3 предупреждения')
             except disnake.errors.Forbidden:
-                await ctx.send(f':sob: `Недостаточно прав! Не могу забанить {user.name}`')
+                await inter.send(f':sob: `Недостаточно прав! Не могу забанить {user.name}`')
 
     @warn.error
     async def warns_error(self, ctx, error):
@@ -105,38 +105,16 @@ class WarnModule(commands.Cog):
         else:
             await ctx.send(f':exclamation:`Произошла внутренняя ошибка : {error}`')
 
-    @commands.command()
-    async def warns(self, ctx: commands.Context, user: str = ''):
-        member = disnake.utils.get(ctx.guild.members, id=ctx.author.id)
-        permit = member.guild_permissions.kick_members
-        if permit and user == 'all':
-            #print('all')
-            warn_list = database.Warn.select().where(database.Warn.guild_id == ctx.guild.id)
-        elif user != 'all' and user != '' and permit:
-            #print('user')
-            user = user.replace('<', '').replace('>', '').replace('@', '').replace('!', '')
-            try:
-                user = int(user)
-            except ValueError:
-                raise InExcept(':exclamation:`Недопустимый пользователь`')
-            user = self.bot.get_user(user)
-            if user is None:
-                raise InExcept(':exclamation:`Такого пользователя не существует`')
-            user_db = database.User.get_or_none(
-                database.User.user_id == user.id, database.User.guild_id == ctx.guild.id)
-            warn_list = database.Warn.select().where(
-                database.Warn.user_db_id == user_db.user_db_id, database.Warn.guild_id == ctx.guild.id)
-
-        elif user == '':
-            #print('self')
-            warn_list = database.Warn.select().where(
-                database.Warn.user_db_id == ctx.author.id, database.Warn.guild_id == ctx.guild.id)
-        else:
-            raise InExcept(
-                ':exclamation:`Вы можете посмортеть только свои варны, для этого просто используйте {warns} без аргументов`')
-        warn_list = [warn for warn in warn_list]
+    @commands.slash_command()
+    async def warns(self, inter: disnake.CommandInteraction,
+                    user: disnake.Member = commands.Param(lambda inter: inter.author)):
+        """Посмотреть список предупреждений пользователя"""
+        warn_list = [*database.Warn.select().where(database.Warn.guild_id == inter.guild_id,
+                                                   database.Warn.user_db_id == database.User.get(
+                                                       database.User.guild_id == inter.guild_id,
+                                                       database.User.user_id == user.id))]
         if warn_list is None or warn_list == []:
-            await ctx.send(':regional_indicator_n: :regional_indicator_o: `Не найдено предупреждений!`')
+            await inter.send(':regional_indicator_n: :regional_indicator_o: `Не найдено предупреждений!`')
             return
         embed = disnake.Embed(title=f'Предупрежденеия:', color=disnake.Colour.random())
         for warn in warn_list:
@@ -150,13 +128,40 @@ class WarnModule(commands.Cog):
             owner = self.bot.get_user(owner)
             user_name = self.bot.get_user(user_id)
             if owner is not None:
-                owner = owner.name
+                owner = owner.mention
             if user_name is not None:
-                user_name = user_name.name
+                user_name = user_name.mention
             embed.add_field(name=f'Warn#{warn_id}',
-                            value=f'Выдал {owner} -> {user_name} {issue_time} на {expiration} дней. Истечение через {expiration_time.days} Причина: {reason}',
+                            value=f'Выдал {owner} -> {user_name} {issue_time}, на {expiration} дней. Истечение через {expiration_time.days}. Причина: {reason}',
                             inline=False)
-        await ctx.send(embed=embed)
+        await inter.send(embed=embed)
+
+    @commands.slash_command()
+    async def all_warns(self, inter: disnake.CommandInteraction):
+        """Посмотреть список всех предупреждений"""
+        warn_list = [*database.Warn.select().where(database.Warn.guild_id == inter.guild_id)]
+        if warn_list is None or warn_list == []:
+            await inter.send(':regional_indicator_n: :regional_indicator_o: `Не найдено предупреждений!`')
+            return
+        embed = disnake.Embed(title=f'Предупрежденеия:', color=disnake.Colour.random())
+        for warn in warn_list:
+            warn_id = warn.warn_id
+            user_id = warn.user_db_id.user_id
+            owner = warn.owner_id.user_id
+            issue_time: datetime.datetime = warn.datetime
+            expiration = warn.expiration
+            expiration_time = issue_time + datetime.timedelta(days=expiration) - datetime.datetime.now()
+            reason = warn.reason
+            owner = self.bot.get_user(owner)
+            user_name = self.bot.get_user(user_id)
+            if owner is not None:
+                owner = owner.mention
+            if user_name is not None:
+                user_name = user_name.mention
+            embed.add_field(name=f'Warn#{warn_id}',
+                            value=f'Выдал {owner} -> {user_name} {issue_time}, на {expiration} дней. Истечение через {expiration_time.days}. Причина: {reason}',
+                            inline=False)
+        await inter.send(embed=embed)
 
     @warns.error
     async def warns_error(self, ctx, error):
@@ -175,7 +180,7 @@ class WarnModule(commands.Cog):
             await ctx.send(f':x: `Такого варна не существует`')
         else:
             user = warn.user_db_id
-            #print(warn.user_db_id)
+            # print(warn.user_db_id)
             warn.delete_instance()
             await ctx.send(
                 f':white_check_mark: `Варн №{warn_id} был удалён! Пользователь {self.bot.get_user(user.user_id).name}`')

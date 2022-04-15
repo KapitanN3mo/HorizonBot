@@ -12,5 +12,5 @@ p_properties = [
 ]
 
 
-def get_profile_properties(ctx: commands.Context, user: disnake.Member):
-    return [obj(ctx, user) for obj in p_properties]
+def get_profile_properties(inter: disnake.CommandInteraction, user: disnake.Member):
+    return [obj(inter, user) for obj in p_properties]

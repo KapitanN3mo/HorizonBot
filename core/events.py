@@ -82,15 +82,6 @@ class Events(commands.Cog):
                 self.bot.loop.create_task(hook(member))
 
     @classmethod
-    def connect_on_message(cls, hook):
-        try:
-            cls.hooks['on_message']
-        except KeyError:
-            cls.hooks['on_message'] = []
-        finally:
-            cls.hooks['on_message'].append(hook)
-
-    @classmethod
     def connect_on_ready(cls, hook):
         try:
             cls.hooks['on_ready']

@@ -8,9 +8,9 @@ import database
 class Messages(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        Events.connect_on_message(self.message_xp)
 
-    async def message_xp(self, message: disnake.Message):
+    @commands.Cog.listener()
+    async def on_message(self, message: disnake.Message):
         if isinstance(message.channel, disnake.DMChannel) or isinstance(message.channel, disnake.GroupChannel):
             return
         member = disnake.utils.get(message.guild.members, id=message.author.id)

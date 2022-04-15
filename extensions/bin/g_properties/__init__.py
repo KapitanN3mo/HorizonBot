@@ -6,7 +6,6 @@ g_properties = [
     GAdmins,
     GAdminAccess,
     GPrivateVoices,
-    GStatInfo,
     GNotifyChannel,
     GMinVoiceTime,
     GVoiceMultiplier,
@@ -14,5 +13,5 @@ g_properties = [
 ]
 
 
-def get_guild_properties(ctx: commands.Context):
-    return [obj(ctx) for obj in g_properties]
+def get_guild_properties(inter, parent_view):
+    return [obj(inter, parent_view) for obj in g_properties]

@@ -7,17 +7,23 @@ import json
 
 
 class GProperty:
-    def __init__(self, ctx: commands.Context):
+    def __init__(self, inter,
+                 parent_view):
+        self.parent_view = parent_view
         self.name = 'g_base_property'
         self.editable = False
-        self.ctx = ctx
+        self.inter = inter
         self.bot = core.Bot.get_bot()
-        self.db_guild: database.Guild = database.Guild.get(database.Guild.guild_id == self.ctx.guild.id)
+        self.db_guild: database.Guild = database.Guild.get(database.Guild.guild_id == self.inter.guild.id)
+        self.edit_interface = None
 
     def out(self):
         pass
 
-    def set(self):
+    def set(self, value) -> bool:
+        pass
+
+    def value(self):
         pass
 
     def __str__(self):
@@ -25,8 +31,8 @@ class GProperty:
 
 
 class GUserCount(GProperty):
-    def __init__(self, ctx):
-        super(GUserCount, self).__init__(ctx)
+    def __init__(self, inter, parent_view):
+        super(GUserCount, self).__init__(inter, parent_view)
         self.name = 'Количество пользователей'
 
     def __str__(self):
@@ -35,7 +41,7 @@ class GUserCount(GProperty):
     def out(self):
         user_counter = 0
         bot_counter = 0
-        for member in self.ctx.guild.members:
+        for member in self.inter.guild.members:
             if member.bot:
                 bot_counter += 1
             else:
@@ -44,12 +50,12 @@ class GUserCount(GProperty):
 
 
 class GAdmins(GProperty):
-    def __init__(self, ctx):
-        super(GAdmins, self).__init__(ctx)
+    def __init__(self, inter, parent_view):
+        super(GAdmins, self).__init__(inter, parent_view)
         self.name = 'Администраторы'
 
     def out(self):
-        return ' '.join([member.mention for member in self.ctx.guild.members if self.check_admin(member)])
+        return ' '.join([member.mention for member in self.inter.guild.members if self.check_admin(member)])
 
     @staticmethod
     def check_admin(member):
@@ -57,8 +63,8 @@ class GAdmins(GProperty):
 
 
 class GAdminAccess(GProperty):
-    def __init__(self, ctx):
-        super(GAdminAccess, self).__init__(ctx)
+    def __init__(self, inter, parent_view):
+        super(GAdminAccess, self).__init__(inter, parent_view)
         self.name = 'Доступ к админ. командам'
 
     def out(self):
@@ -71,8 +77,8 @@ class GAdminAccess(GProperty):
 
 
 class GPrivateVoices(GProperty):
-    def __init__(self, ctx):
-        super(GPrivateVoices, self).__init__(ctx)
+    def __init__(self, inter, parent_view):
+        super(GPrivateVoices, self).__init__(inter, parent_view)
         self.name = 'Приватные каналы'
 
     def out(self):
@@ -82,32 +88,11 @@ class GPrivateVoices(GProperty):
             return f'```{emojis.white_check_mark_unicode} Включены```{self.bot.get_channel(self.db_guild.private_voice).mention}'
 
 
-class GStatInfo(GProperty):
-    def __init__(self, ctx: commands.Context):
-        super(GStatInfo, self).__init__(ctx)
-        self.name = 'Статистика'
-
-    def out(self):
-        stat_info = ''
-        if self.db_guild.statistics_category is None:
-            stat_info = f'```{emojis.no_entry_unicode} Выключена```'
-        else:
-            stat_info += '```'
-            s_info = json.loads(self.db_guild.statistics_info)
-            for stat in s_info:
-                if s_info[stat]['mode']:
-                    stat_info += f'{emojis.white_check_mark_unicode} {stat}\n'
-                else:
-                    stat_info += f'{emojis.no_entry_unicode} {stat}\n'
-            stat_info += '```'
-        return stat_info
-
-
 class GNotifyChannel(GProperty):
-    def __init__(self, ctx):
-        super(GNotifyChannel, self).__init__(ctx)
+    def __init__(self, inter, parent_view):
+        super(GNotifyChannel, self).__init__(inter, parent_view)
         self.name = 'Канал для уведомлений'
-        self.editable = True
+        self.editable = False
 
     def out(self):
         if self.db_guild.notify_channel is None:
@@ -117,19 +102,30 @@ class GNotifyChannel(GProperty):
 
 
 class GMinVoiceTime(GProperty):
-    def __init__(self, ctx: commands.Context):
-        super(GMinVoiceTime, self).__init__(ctx)
+    def __init__(self, inter, parent_view):
+        super(GMinVoiceTime, self).__init__(inter, parent_view)
         self.editable = True
         self.name = 'Минимальное время в канале для начисления опыта'
+        self.edit_data = {'data_type': int, 'limit': '1.2'}
+
+    def set(self, value):
+        try:
+            self.db_guild.minimum_voice_time = value
+            self.db_guild.save()
+            return True
+        except:
+            return False
+
+    def value(self):
+        return str(self.db_guild.minimum_voice_time)
 
     def out(self):
         return '```' + str(self.db_guild.minimum_voice_time) + ' секунд```'
 
 
 class GVoiceMultiplier(GProperty):
-    def __init__(self, ctx: commands.Context):
-        super(GVoiceMultiplier, self).__init__(ctx)
-        self.editable = True
+    def __init__(self, inter, parent_view):
+        super(GVoiceMultiplier, self).__init__(inter, parent_view)
         self.name = 'Множитель для голосовых каналов'
 
     def out(self):
@@ -137,8 +133,8 @@ class GVoiceMultiplier(GProperty):
 
 
 class GTextMultiplier(GProperty):
-    def __init__(self, ctx):
-        super(GTextMultiplier, self).__init__(ctx)
+    def __init__(self, inter, parent_view):
+        super(GTextMultiplier, self).__init__(inter, parent_view)
         self.name = 'Множитель для текстовых каналов'
 
     def out(self):

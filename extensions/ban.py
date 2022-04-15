@@ -7,17 +7,17 @@ class BanModule(commands.Cog):
         self.bot = bot
 
     @commands.has_permissions(ban_members=True)
-    @commands.command()
-    async def ban(self, ctx, user: disnake.Member, *, reason: str = ''):
-        if user == ctx.author:
-            await ctx.send(':face_with_raised_eyebrow: `Ты чё, дурак что ли? Ты сам себя забанить решил? Молодец!`')
+    @commands.slash_command()
+    async def ban(self, inter: disnake.CommandInteraction, user: disnake.Member, reason: str = ''):
+        if user == inter.author:
+            await inter.send(':face_with_raised_eyebrow: `Ты чё, дурак что ли? Ты сам себя забанить решил? Молодец!`')
             return
         if reason == '':
             reason = 'Причина не указана'
         await user.ban(reason=reason)
-        await ctx.send(f':white_check_mark: `Пользователь {user.display_name} забанен!`')
-        ban_emb = disnake.Embed(title=f'Вы забанены на сервере {ctx.guild.name}',
-                                description=f'Администратор: {ctx.author.name}', colour=disnake.Colour.red())
+        await inter.send(f':white_check_mark: `Пользователь {user.display_name} забанен!`')
+        ban_emb = disnake.Embed(title=f'Вы забанены на сервере {inter.guild.name}',
+                                description=f'Администратор: {inter.author.name}', colour=disnake.Colour.red())
 
         await user.send(embed=ban_emb)
 
@@ -29,24 +29,6 @@ class BanModule(commands.Cog):
             await ctx.send(f':exclamation:`Произошла внутренняя ошибка : {error}`')
         elif isinstance(error, commands.errors.MissingPermissions):
             await ctx.send('`:no_entry: У вас недостаточно прав для бана пользователя!`')
-
-    @commands.has_permissions(ban_members=True)
-    @commands.command()
-    async def unban(self, ctx, user_id: int):
-        banned_users = await ctx.guild.bans()
-        for banned_member in banned_users:
-            if banned_member.user.id == user_id:
-                user = banned_member.user
-                await ctx.guild.unban(user)
-                await ctx.send(f':ok_hand: Бан пользователя {user.name} будет снят!')
-                ban_emb = disnake.Embed(title=f' Блокировка на сервере {ctx.guild.name} снята!',
-                                        description=f'Администратор: {ctx.author.name}', colour=disnake.Colour.red)
-
-                await user.send(embed=ban_emb)
-
-    @unban.error
-    async def unban_error(self, ctx, error):
-        await ctx.send(f':exclamation:`Произошла внутренняя ошибка : {error}`')
 
 
 def setup(bot):

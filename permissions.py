@@ -42,7 +42,10 @@ def check_admin_permission(member: disnake.Member, guild: disnake.Guild):
 def developer_permission_required(func):
     @wraps(func)
     async def wrapper(*args, **kwargs):
-        ctx: commands.Context = args[1]
+        try:
+            ctx: commands.Context = args[1]
+        except IndexError:
+            ctx: disnake.CommandInteraction = kwargs['inter']
         with open('settings.json', 'r') as s_file:
             settings = json.load(s_file)
             if ctx.author.id in map(int, settings['developers']):

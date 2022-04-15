@@ -39,8 +39,34 @@ class MusicCommands(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
+    @commands.slash_command()
+    async def music_help(self, inter: disnake.CommandInteraction):
+        """Справка для музыки [BETA]"""
+        text = '```[play] {url/name} - запуск воспроизведения. (Используется один раз для старта.' \
+               ' Для добавления треков использовать [add])\n' \
+               '[add] {url/name} - добавить новый трек в очередь воспроизведения\n' \
+               '[queue] - просмотреть очередь воспроизведения\n' \
+               '[playlist_loop] - зациклить весь список\n' \
+               '[loop] - зациклить один трек\n' \
+               '[next] - следующий трек\n' \
+               '[back] - предыдущий трек\n' \
+               '[shuffle] - перемешать треки\n' \
+               '[stop] - остановить воспроизведение\n' \
+               '[pause] - поставить на паузу\n' \
+               '[resume] - возобновить воспроизведение\n' \
+               '[select] {queue_id} - проиграть сейчас трек под номером {queue_id} из списка\n' \
+               '[move] {first_track,second_track} - переместить {first_track} на позицию {second_track}, при этом' \
+               ' {second_track} смещается на одну позицию вперёд\n' \
+               '[swap] {first_track,second_track} - меняет местами {first_track} и {second_track}\n' \
+               '[remove] {track_id} - удаляет трек из списка```'
+        emb = disnake.Embed(title='Справка по модулю [MUSIC]', colour=disnake.Colour.purple(), description=text)
+        emb.timestamp = datetime.datetime.now()
+        emb.set_footer(text='Справочное бюро', icon_url=self.bot.user.display_avatar)
+        await inter.send(embed=emb)
+
     @commands.command()
     async def play(self, ctx: commands.Context, *, url: str):
+        print('play')
         try:
             voice_channel: disnake.VoiceChannel = ctx.author.voice.channel
         except:
@@ -260,7 +286,7 @@ class MusicPlayer:
                 self.pointer = 0
         filename = ytdl.prepare_filename(self.queue[self.pointer])
         if not os.path.exists(pathlib.Path(music_dir, filename)):
-            #print(self.queue[self.pointer]['webpage_url'])
+            # print(self.queue[self.pointer]['webpage_url'])
             ytdl.download([self.queue[self.pointer]['webpage_url']])
             shutil.move(filename, pathlib.Path(music_dir, filename))
         voice_client = self.guild.voice_client
@@ -276,7 +302,7 @@ class MusicPlayer:
             except ValueError:
                 attempt_counter += 1
             if attempt_counter == 10:
-                #print(10)
+                # print(10)
                 break
 
     def _next(self, error):
@@ -319,7 +345,7 @@ class MusicPlayer:
         self.queue.append(data)
 
     def finalize(self):
-        #print(self.id)
+        # print(self.id)
         self.bot.loop.create_task(
             self.text_channel.send(f'{emojis.white_check_mark} `Очередь воспроизведения окончена!`'))
         try:
