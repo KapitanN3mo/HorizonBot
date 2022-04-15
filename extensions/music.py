@@ -401,7 +401,7 @@ class Players:
             return False
 
     @classmethod
-    def get_player(cls, guild: disnake.Guild) -> MusicPlayer | None:
+    def get_player(cls, guild: disnake.Guild):
         for pl in cls.all_players:
             if pl.guild.id == guild.id:
                 return pl.player
