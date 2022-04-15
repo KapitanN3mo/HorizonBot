@@ -15,7 +15,7 @@ class Bot:
     bot = commands.Bot(command_prefix=commands.when_mentioned_or('h.'),
                        case_insensitive=True,
                        intents=intents,
-                       test_guilds=[796776835367043092])
+                       test_guilds=[796776835367043092,849628635639971871])
     bot.remove_command('help')
     with open('settings.json', 'r') as set_file:
         settings = json.load(set_file)
