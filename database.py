@@ -8,7 +8,7 @@ pf = platform.system()
 db = peewee.PostgresqlDatabase(host='127.0.0.1',
                                port=5432,
                                database='horizon_bot',
-                               user='horizon_bot',
+                               user='HorizonBot',
                                password='s24d300')
 
 # DATABASE_URL = os.environ['DATABASE_URL']

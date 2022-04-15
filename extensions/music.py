@@ -386,7 +386,7 @@ class Players:
         self.player = player
 
     @classmethod
-    def get_owner(cls, guild: disnake.Guild) -> disnake.Member | None:
+    def get_owner(cls, guild: disnake.Guild):
         for pl in cls.all_players:
             if pl.guild.id == guild.id:
                 return pl.owner
