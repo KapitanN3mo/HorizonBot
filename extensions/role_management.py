@@ -16,7 +16,7 @@ class RMS(commands.Cog):
     tsk: List[asyncio.Task] = []
 
     @classmethod
-    def add_role(cls, role: disnake.Role, emoji: str):
+    def add_role(cls, role: disnake.Role, emoji: str, block: database.RoleBlock):
         try:
             database.Role.insert(
                 role_id=role.id,
@@ -24,6 +24,7 @@ class RMS(commands.Cog):
                 name=role.name,
                 emoji=emoji,
                 color=role.color,
+                linked_block=block,
                 having_users='[]'
             ).execute()
             return True, None
@@ -32,18 +33,19 @@ class RMS(commands.Cog):
 
     @classmethod
     def connect_role(cls, guild: disnake.Guild, role: disnake.Role, block_id: int, emoji: str):
+        db_block = database.RoleBlock.get_or_none(database.RoleBlock.block_id == block_id,
+                                                  database.RoleBlock.guild == guild.id)
+        if db_block is None:
+            return False, 'Блок не найден'
         db_role = database.Role.get_or_none(database.Role.role_id == role.id)
         if db_role is None:
-            result, info = cls.add_role(role, emoji)
+            result, info = cls.add_role(role, emoji, db_block)
             if result is False:
                 return False, f'Ошибка БД: {info}'
             db_role = database.Role.get_or_none(database.Role.role_id == role.id)
         else:
             return False, 'Эта роль управляется другим блоком!'
-        db_block = database.RoleBlock.get_or_none(database.RoleBlock.block_id == block_id,
-                                                  database.RoleBlock.guild == guild.id)
-        if db_block is None:
-            return False, 'Блок не найден'
+
         if cls.check_emoji(db_block, emoji):
             return False, 'Этот эмодзи уже используется в этом блоке'
         db_role.linked_block = db_block
@@ -109,7 +111,7 @@ class RMS(commands.Cog):
 
     @classmethod
     def get_blocks_embed(cls, guild: disnake.Guild):
-        emb = disnake.Embed(title=f'Список блоков для {guild.name}', description='')
+        emb = disnake.Embed(title=f'Список блоков для {guild.name}', description='', color=disnake.Colour(0x4F9100))
         blocks = cls.get_blocks_data(guild)
         for block in blocks:
             print(block)
@@ -118,13 +120,14 @@ class RMS(commands.Cog):
                 channel = cls.bot.get_channel(block.block_channel_id)
             else:
                 channel = None
-            row = f'{block.block_id}:' \
-                  f'{channel.mention if channel is not None else "HIDDEN"}' \
-                  f' Ролей :{connected_role_count}\n'
+            row = f'ID:{block.block_id};' \
+                  f' Канал: {channel.mention if channel is not None else "Скрытый"};' \
+                  f' Кол-во ролей: {connected_role_count}\n'
             emb.description += row
         if len(blocks) == 0:
             emb.description = 'Ни одного блока не найдено '
-            emb.set_image(url='https://cdn.discordapp.com/attachments/940641488122044476/973146397371150366/7c1ca448be31c489fb66214ea3ae6deb.jpg')
+            emb.set_image(
+                url='https://cdn.discordapp.com/attachments/940641488122044476/973146397371150366/7c1ca448be31c489fb66214ea3ae6deb.jpg')
         emb.set_footer(icon_url=cls.bot.user.display_avatar)
         emb.timestamp = datetime.datetime.now()
         return emb
