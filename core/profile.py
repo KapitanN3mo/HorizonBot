@@ -99,7 +99,6 @@ class ProfileModule(commands.Cog):
                                  message_count=0,
                                  xp=0,
                                  in_voice_time=0,
-                                 sys_info=json.dumps(default_sys_info),
                                  discord_name=user.name).execute()
             return 1
         except:

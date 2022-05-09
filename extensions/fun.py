@@ -24,67 +24,6 @@ class FunCommands(commands.Cog):
         self.bot = bot
 
     @commands.slash_command()
-    async def fry(self, inter: disnake.CommandInteraction, user: disnake.User, piece_count=10):
-        """Зажарь ближнего своего!"""
-        if user.id == inter.author.id:
-            await inter.send('Оооо да вы, месье, ценитель каннибализма! 🧐 ')
-        if user == self.bot.user:
-            await inter.send('Не-не-не, я не вкусный! 🤖')
-            return
-        start_time = datetime.datetime.now()
-        current_pieces_count = piece_count
-        embed = disnake.Embed(title=f'🔥 Жарим {user.name}',
-                              description="**Прогресс отжаривания:**\n" + "<" + "=" + ">",
-                              colour=0xFF8F00)
-        await inter.send(embed=embed)
-        msg = await inter.original_message()
-        for i in range(1, 11):
-            embed = disnake.Embed(title=f'🔥 Жарим {user.name}',
-                                  description="**Прогресс отжаривания:**\n" + "<" + "=" * i + ">" + str(i * 10) + "%",
-                                  colour=0xFF8F00)
-            await msg.edit(embed=embed)
-            await asyncio.sleep(1)
-        embed = disnake.Embed(title=f'🔥 Жарим {user.name}',
-                              description="**Прогресс отжаривания:**\n" + f"Успешно отжарено! "
-                                                                          f"Хотите кусочек? Осталось {current_pieces_count} 🍗",
-                              colour=0xFF8F00)
-        await msg.edit(embed=embed)
-        await msg.add_reaction('🍗')
-        while True:
-            if ((datetime.datetime.now() - start_time).seconds / 60) >= 10:
-                await msg.edit(embed=disnake.Embed(title=f'🔥 Жарим {user.name}',
-                                                   description="**Прогресс отжаривания:**\n" +
-                                                               f"Всё испортилось! 😕",
-                                                   colour=0xFF8F00))
-                return
-            emojis = msg.reactions
-            react_count = None
-            for emoji in emojis:
-                if emoji.emoji == '🍗':
-                    react_count = emoji.count
-                    break
-            if react_count is None:
-                await inter.send('Кто-то украл всю еду! Вот розьбiйник! 🤠')
-                await msg.edit(embed=disnake.Embed(title=f'🔥 Жарим {user.name}',
-                                                   description="**Прогресс отжаривания:**\n" +
-                                                               f"Всё украли! Расходимся! 😡",
-                                                   colour=0xFF8F00))
-                return
-            current_pieces_count = piece_count + 1 - react_count
-            embed = disnake.Embed(title=f'🔥 Жарим {user.name}',
-                                  description="**Прогресс отжаривания:**\n" +
-                                              f"Хотите кусочек? Осталось {current_pieces_count} 🍗 ?",
-                                  colour=0xFF8F00)
-            await msg.edit(embed=embed)
-            await asyncio.sleep(1)
-            if current_pieces_count <= 0:
-                break
-        await msg.edit(embed=disnake.Embed(title=f'🔥 Жарим {user.name}',
-                                           description="**Прогресс отжаривания:**\n" +
-                                                       f"Всего сожрали!",
-                                           colour=0xFF8F00))
-
-    @commands.slash_command()
     async def cookie(self, inter: disnake.CommandInteraction, user: disnake.User):
         """Отправить печеньку"""
         emb = disnake.Embed(title=' ', description=f'{user.mention} <_> держи печеньку от {inter.author.mention}!',
@@ -98,7 +37,8 @@ class FunCommands(commands.Cog):
     async def hug(self, inter: disnake.CommandInteraction, user: disnake.User):
         """Обнимашкииии!"""
         emb = disnake.Embed(title='Обнимааааашкииии!',
-                            description=f'{inter.author.mention} стискивает в объятиях {user.mention}!', colour=0xe1ad0c)
+                            description=f'{inter.author.mention} стискивает в объятиях {user.mention}!',
+                            colour=0xe1ad0c)
         emb.set_author(name=inter.author.display_name, icon_url=inter.author.display_avatar.url)
         emb.set_image(url=random.choice(hug_gif))
         emb.set_footer(text=f'Провайдер обнимашек в ваше сердечко -  {self.bot.user.name}',
@@ -293,6 +233,61 @@ class FunCommands(commands.Cog):
         await inter.send(embed=emb)
 
 
+class Fry(commands.Cog):
+    embeds = {}
+
+    def __init__(self, bot: commands.Bot):
+        self.bot = bot
+
+    @commands.slash_command()
+    async def fry(self, inter: disnake.CommandInteraction, user: disnake.User, piece_count: int = 10):
+        """Зажарь ближнего своего!"""
+        channel = self.bot.get_channel(inter.channel_id)
+        if user.id == inter.author.id:
+            await channel.send('Оооо да вы, месье, ценитель каннибализма! 🧐 ')
+        if user == self.bot.user:
+            await channel.send('Не-не-не, я не вкусный! 🤖')
+            return
+        embed = disnake.Embed(title=f'🔥 Жарим {user.display_name}', colour=disnake.Colour(0xFF9100),
+                              description='**Прогресс отжаривания:**\n'
+                                          '<> [0%]')
+        await inter.send(embed=embed)
+        for i in range(1, 11):
+            await asyncio.sleep(1)
+            embed.description = '**Прогресс отжаривания:**\n' \
+                                f'<{"=" * i}> [{i * 10}%]'
+            await inter.edit_original_message(embed=embed)
+        embed.description += f'\nОсталось кусочков {piece_count}/{piece_count} [🍗]'
+        msg = await inter.original_message()
+        await msg.add_reaction('🔥')
+        self.embeds[msg.id] = {'pieces': piece_count, 'pieces_count': piece_count, 'name': user.display_name}
+        await inter.edit_original_message(embed=embed)
+
+    def render(self, msg_id):
+        emb = disnake.Embed(title=f'🔥 Жарим {self.embeds[msg_id]["name"]}', colour=disnake.Colour(0xFF9100))
+        emb.description = '**Прогресс отжаривания:**\n'
+        emb.timestamp = datetime.datetime.now()
+        if self.embeds[msg_id]['pieces'] <= 0:
+            emb.description += '__Всего сожрали__ 💀'
+        else:
+            emb.description += f'Осталось кусочков {self.embeds[msg_id]["pieces"]}/{self.embeds[msg_id]["pieces_count"]} [🍗]'
+        return emb
+
+    @commands.Cog.listener()
+    async def on_raw_reaction_add(self, payload: disnake.RawReactionActionEvent):
+        if payload.member.id == self.bot.user.id:
+            return
+        channel = self.bot.get_channel(payload.channel_id)
+        message = await channel.fetch_message(payload.message_id)
+        if payload.message_id in self.embeds and payload.emoji.name == '🔥':
+            self.embeds[payload.message_id]["pieces"] -= 1
+            emb = self.render(payload.message_id)
+            await message.edit(embed=emb)
+            if self.embeds[payload.message_id]['pieces'] <= 0:
+                del self.embeds[payload.message_id]
+                await message.clear_reactions()
+
+
 class FeedView(disnake.ui.View):
     def __init__(self, author: disnake.Member, recipient: disnake.Member):
         super().__init__()
@@ -328,3 +323,4 @@ class FeedSelect(disnake.ui.Select):
 
 def setup(bot: commands.Bot):
     bot.add_cog(FunCommands(bot))
+    bot.add_cog(Fry(bot))

@@ -57,7 +57,6 @@ class Bot:
             if module.endswith('.py') and module != '__init__.py':
                 print(module)
                 cls.bot.load_extension(f'extensions.{module.replace(".py", "")}')
-
         ft = cls.bot.loop.create_task(cls._cleaning_garbage())
         cls.start_time = dt.get_msk_datetime()
         cls.bot.run(token)

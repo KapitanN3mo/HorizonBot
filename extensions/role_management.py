@@ -1,4 +1,6 @@
 import asyncio
+import datetime
+
 import disnake
 from disnake.ext import commands, tasks
 import core
@@ -88,9 +90,28 @@ class RMS(commands.Cog):
             return False, str(ex)
 
     @classmethod
+    async def remove_block(cls, guild: disnake.Guild, block_id: int):
+        block: database.RoleBlock = database.RoleBlock.get_or_none(database.RoleBlock.block_id == block_id,
+                                                                   database.RoleBlock.guild == guild.id)
+        if block is None:
+            return False, 'Такой блок не существует'
+        try:
+            roles = database.Role.select().where(database.Role.linked_block == block)
+            for role in roles:
+                role.delete_instance()
+            channel = cls.bot.get_channel(block.block_channel_id)
+            message = await channel.fetch_message(block.block_message_id)
+            await message.delete()
+        except Exception as ex:
+            print(ex)
+        block.delete_instance()
+        return True, None
+
+    @classmethod
     def get_blocks_embed(cls, guild: disnake.Guild):
         emb = disnake.Embed(title=f'Список блоков для {guild.name}', description='')
-        for block in cls.get_blocks_data(guild):
+        blocks = cls.get_blocks_data(guild)
+        for block in blocks:
             print(block)
             connected_role_count = database.Role.select().where(database.Role.linked_block == block).count()
             if block.block_channel_id is not None:
@@ -101,6 +122,11 @@ class RMS(commands.Cog):
                   f'{channel.mention if channel is not None else "HIDDEN"}' \
                   f' Ролей :{connected_role_count}\n'
             emb.description += row
+        if len(blocks) == 0:
+            emb.description = 'Ни одного блока не найдено '
+            emb.set_image(url='https://cdn.discordapp.com/attachments/940641488122044476/973146397371150366/7c1ca448be31c489fb66214ea3ae6deb.jpg')
+        emb.set_footer(icon_url=cls.bot.user.display_avatar)
+        emb.timestamp = datetime.datetime.now()
         return emb
 
     @classmethod
@@ -231,6 +257,16 @@ class RoleCommands(commands.Cog):
             await inter.send(f'{emojis.white_check_mark} `Роль удалена`')
         else:
             await inter.send(f'{emojis.exclamation}`{data}`')
+
+    @commands.slash_command()
+    @admin_permission_required
+    async def remove_block(self, inter: disnake.CommandInteraction, block_id: int):
+        """Удаление блока"""
+        result, com = await RMS.remove_block(inter.guild, block_id)
+        if result:
+            await inter.send(f'{emojis.white_check_mark}`Блок #{block_id} успешно удалён`')
+        else:
+            await inter.send(f'При удалении блока произошла ошибка: {com}')
 
     @commands.slash_command()
     @admin_permission_required

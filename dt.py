@@ -12,3 +12,4 @@ def get_str_msk_datetime() -> str:
 
 
 datetime_format = '%Y-%m-%d %H:%M'
+enchanted_format = '%Y-%m-%d %H:%M:%S'

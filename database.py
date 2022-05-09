@@ -43,8 +43,7 @@ class User(BaseModel):
     message_count = peewee.IntegerField(null=False)
     xp = peewee.IntegerField(null=False)
     in_voice_time = peewee.IntegerField(null=False)
-    sys_info = peewee.TextField(null=False)
-    voice_entry = peewee.TimestampField(null=True)
+    send_voice_report = peewee.BooleanField(default=True)
     discord_name = peewee.TextField(null=False)
 
     class Meta:
@@ -137,6 +136,13 @@ class ClanMember(BaseModel):
     class_ = peewee.TextField(null=False)
 
 
+class VoiceJournal(BaseModel):
+    identity = peewee.BigAutoField()
+    user = peewee.ForeignKeyField(User, null=False)
+    timestamp = peewee.TimestampField(default=dt.get_msk_datetime())
+    data = peewee.TextField(null=False)
+
+
 Guild.create_table()
 User.create_table()
 Warn.create_table()
@@ -147,3 +153,4 @@ RoleBlock.create_table()
 Role.create_table()
 Clan.create_table()
 ClanMember.create_table()
+VoiceJournal.create_table()
