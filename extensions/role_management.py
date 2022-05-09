@@ -16,7 +16,7 @@ class RMS(commands.Cog):
     tsk: List[asyncio.Task] = []
 
     @classmethod
-    def add_role(cls, role: disnake.Role, emoji: str, block: database.RoleBlock):
+    def add_role(cls, role: disnake.Role, emoji: str,block:database.RoleBlock):
         try:
             database.Role.insert(
                 role_id=role.id,
@@ -24,7 +24,6 @@ class RMS(commands.Cog):
                 name=role.name,
                 emoji=emoji,
                 color=role.color,
-                linked_block=block,
                 having_users='[]'
             ).execute()
             return True, None
@@ -33,19 +32,18 @@ class RMS(commands.Cog):
 
     @classmethod
     def connect_role(cls, guild: disnake.Guild, role: disnake.Role, block_id: int, emoji: str):
-        db_block = database.RoleBlock.get_or_none(database.RoleBlock.block_id == block_id,
-                                                  database.RoleBlock.guild == guild.id)
-        if db_block is None:
-            return False, 'Блок не найден'
         db_role = database.Role.get_or_none(database.Role.role_id == role.id)
         if db_role is None:
-            result, info = cls.add_role(role, emoji, db_block)
+            result, info = cls.add_role(role, emoji)
             if result is False:
                 return False, f'Ошибка БД: {info}'
             db_role = database.Role.get_or_none(database.Role.role_id == role.id)
         else:
             return False, 'Эта роль управляется другим блоком!'
-
+        db_block = database.RoleBlock.get_or_none(database.RoleBlock.block_id == block_id,
+                                                  database.RoleBlock.guild == guild.id)
+        if db_block is None:
+            return False, 'Блок не найден'
         if cls.check_emoji(db_block, emoji):
             return False, 'Этот эмодзи уже используется в этом блоке'
         db_role.linked_block = db_block
