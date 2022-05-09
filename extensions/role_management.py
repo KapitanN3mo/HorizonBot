@@ -16,7 +16,7 @@ class RMS(commands.Cog):
     tsk: List[asyncio.Task] = []
 
     @classmethod
-    def add_role(cls, role: disnake.Role, emoji: str,block:database.RoleBlock):
+    def add_role(cls, role: disnake.Role, emoji: str):
         try:
             database.Role.insert(
                 role_id=role.id,
