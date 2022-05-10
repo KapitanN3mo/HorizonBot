@@ -52,7 +52,6 @@ class VoiceJournal:
         history = journal.history
         for i in range(len(history)):
             row = history[i]
-            print(row)
             event = row.get('event')
             timestamp = datetime.datetime.strptime(row.get('timestamp'), dt.enchanted_format)
             if event == 'join':
@@ -77,8 +76,6 @@ class VoiceJournal:
         if end == 0 or start == 0:
             return 0
         delta = end - start
-        print(start, end)
-        print(delta)
         if delta.seconds <= 0:
             return 0
         else:
@@ -108,7 +105,6 @@ class VoiceJournal:
             for row in journal:
                 timestamp = datetime.datetime.strptime(row.get("timestamp"), dt.enchanted_format)
                 event = row.get('event')
-                print(row)
                 if event == 'mute':
                     emoji = '🎙'
                     emb.description += f'{emoji}:{event.upper()} {timestamp.time()}\n'
@@ -183,7 +179,6 @@ class VoiceModule(commands.Cog):
 
     @classmethod
     async def create_private_voice(cls, member: disnake.Member, channel: disnake.VoiceChannel):
-        print('check private')
         db_guild: database.Guild = database.Guild.get_or_none(database.Guild.guild_id == member.guild.id)
         if channel is None:
             return
@@ -195,17 +190,14 @@ class VoiceModule(commands.Cog):
             pr = {
                 member: overwrite
             }
-            print('create')
             ch = await channel.category.create_voice_channel(member.display_name, overwrites=pr)
             await member.move_to(ch)
-            print('create1')
 
     @commands.Cog.listener()
     async def on_voice_state_update(self, member: disnake.Member, before: disnake.VoiceState,
                                     after: disnake.VoiceState):
         if before.channel is None and after.channel is not None:
             await connect_channel(member, after)
-            print('connect')
         elif before.channel is not None and after.channel is None:
             await leave_channel(member, before)
         elif before.channel is not None and after.channel is not None and before.channel.id != after.channel.id:
@@ -467,7 +459,6 @@ class EnableVoiceModalWindow(disnake.ui.Modal):
 
     async def callback(self, interaction: disnake.ModalInteraction, /) -> None:
         await interaction.response.defer(with_message=False)
-        print('callback')
         category_name = interaction.text_values['category_name']
         channel_name = interaction.text_values['channel_name']
         category = await interaction.guild.create_category(name=category_name, reason='Создана для приватных каналов')
@@ -528,7 +519,6 @@ async def add_xp_by_voice_time(member: disnake.Member):
         xp = 0
     db_user.in_voice_time += t_time
     db_user.save()
-    print(f'XP {xp} TTIME {t_time} CTIME {c_time}')
 
 
 def setup(bot):

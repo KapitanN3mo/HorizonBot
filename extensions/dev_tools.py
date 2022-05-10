@@ -1,3 +1,4 @@
+import datetime
 import os
 import importlib
 import subprocess
@@ -12,6 +13,19 @@ import memory_profiler
 class ExecuteModule(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
+
+    @commands.slash_command()
+    @developer_permission_required
+    async def auth_url(self, inter: disnake.CommandInteraction):
+        emb = disnake.Embed(title=' ',
+                            description='[Release](https://discord.com/api/oauth2/authorize?client_id=89936723590'
+                                        '5261608&permissions=8&scope=bot%20applications.commands)\n'
+                                        '[Development](https://discord.com/api/oauth2/authorize?client_id='
+                                        '904682473819091015&permissions=8&scope=bot%20applications.commands)',
+                            color=disnake.Colour(0x82807C))
+        emb.set_footer(icon_url=self.bot.user.display_avatar.url)
+        emb.timestamp = datetime.datetime.now()
+        await inter.send(embed=emb)
 
     @commands.slash_command()
     async def ping(self, inter: disnake.CommandInteraction):

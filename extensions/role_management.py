@@ -208,11 +208,14 @@ class RMS(commands.Cog):
             try:
                 block_message: disnake.Message = await block_channel.fetch_message(role_block.block_message_id)
             except disnake.errors.NotFound:
-                await guild.system_channel.send(
-                    f'{emojis.exclamation}`[RMS_ERROR] Сообщение блока {role_block.name}#{role_block.block_id} не найдено! '
-                    f'Блок переведён в скрытый режим`')
-                cls.hide_block(guild, role_block.block_id)
-                return
+                try:
+                    await guild.system_channel.send(
+                        f'{emojis.exclamation}`[RMS_ERROR] Сообщение блока {role_block.name}#{role_block.block_id} не найдено! '
+                        f'Блок переведён в скрытый режим`')
+                    cls.hide_block(guild, role_block.block_id)
+                    return
+                except AttributeError:
+                    return
             if len(roles) == 0:
                 cls.hide_block(guild, role_block)
                 await guild.system_channel.send(

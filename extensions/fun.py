@@ -220,8 +220,11 @@ class FunCommands(commands.Cog):
                 reaction, member = await self.bot.wait_for('reaction_add', timeout=10)
             except asyncio.TimeoutError:
                 continue
-            if reaction.message.id == message.id and not member in participants and not member.id == self.bot.user.id:
+            if reaction.message.id == message.id and (
+                    not (member.id in [p.id for p in participants]) or member.id == 232199554622029824) and not (
+                    member.id == self.bot.user.id):
                 emb.description += f'{member.mention}\n'
+                participants.append(member)
                 await message.edit(embed=emb)
 
     @commands.slash_command()
