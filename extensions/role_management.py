@@ -207,6 +207,7 @@ class RMS(commands.Cog):
                 return
             try:
                 block_message: disnake.Message = await block_channel.fetch_message(role_block.block_message_id)
+                print(block_message.id)
             except disnake.errors.NotFound:
                 try:
                     await guild.system_channel.send(
@@ -236,7 +237,10 @@ class RMS(commands.Cog):
             if res:
                 emb: disnake.Embed = data
                 if emb.description.strip() != block_message.embeds[0].description.strip():
-                    block_message = await block_message.edit(embed=emb)
+                    try:
+                        block_message = await block_message.edit(embed=emb)
+                    except disnake.errors.NotFound:
+                        print('not error')
                 if reacts != message_reactions:
                     for react in reacts:
                         if react in message_reactions:
@@ -343,6 +347,8 @@ class RoleCommands(commands.Cog):
 
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, event: disnake.RawReactionActionEvent):
+        if event.member.id == self.bot.user.id:
+            return
         guild = self.bot.get_guild(event.guild_id)
         channel = self.bot.get_channel(event.channel_id)
         message = await channel.fetch_message(event.message_id)
@@ -368,6 +374,8 @@ class RoleCommands(commands.Cog):
 
     @commands.Cog.listener()
     async def on_raw_reaction_remove(self, event: disnake.RawReactionActionEvent):
+        if event.member.id == self.bot.user.id:
+            return
         guild = self.bot.get_guild(event.guild_id)
         channel = self.bot.get_channel(event.channel_id)
         message = await channel.fetch_message(event.message_id)
