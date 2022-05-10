@@ -418,8 +418,7 @@ class BlockCreteModal(disnake.ui.Modal):
             custom_id='name',
             style=disnake.TextInputStyle.short,
             required=True,
-            min_length=3,
-            max_length=15
+            min_length=1
         )
         self.color_input = disnake.ui.TextInput(
             label='Цвет в HEX',
