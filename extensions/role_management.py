@@ -118,7 +118,7 @@ class RMS(commands.Cog):
                 channel = cls.bot.get_channel(block.block_channel_id)
             else:
                 channel = None
-            row = f'ID:{block.block_id};' \
+            row = f'ID:{block.block_id}:{block.name};' \
                   f' Канал: {channel.mention if channel is not None else "Скрытый"};' \
                   f' Кол-во ролей: {connected_role_count}\n'
             emb.description += row
@@ -207,7 +207,7 @@ class RMS(commands.Cog):
                 return
             try:
                 block_message: disnake.Message = await block_channel.fetch_message(role_block.block_message_id)
-                #print(block_message.id)
+                # print(block_message.id)
             except disnake.errors.NotFound:
                 try:
                     await guild.system_channel.send(
