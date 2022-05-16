@@ -79,7 +79,7 @@ class VoiceJournal:
         if delta.seconds <= 0:
             return 0
         else:
-            print(delta.seconds)
+            #print(delta.seconds)
             return delta.seconds
 
     @classmethod
@@ -237,7 +237,7 @@ class VoiceJournalView(disnake.ui.View):
 
     def render(self):
         self.journals = VoiceJournal.get_journals_from_db_by_member(self.member)
-        print(self.journals)
+        #print(self.journals)
         self.emb = VoiceJournal.pretty_print([json.loads(j.data) for j in self.journals[self.index:self.index + 1]])
         self.emb.set_footer(text=f'Запись {self.index + 1} из {len(self.journals)}')
         self.emb.timestamp = datetime.datetime.now()

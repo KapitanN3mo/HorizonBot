@@ -207,7 +207,7 @@ class RMS(commands.Cog):
                 return
             try:
                 block_message: disnake.Message = await block_channel.fetch_message(role_block.block_message_id)
-                print(block_message.id)
+                #print(block_message.id)
             except disnake.errors.NotFound:
                 try:
                     await guild.system_channel.send(
