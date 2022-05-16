@@ -143,6 +143,27 @@ class VoiceJournal(BaseModel):
     data = peewee.TextField(null=False)
 
 
+class Schedule(BaseModel):
+    identity = peewee.AutoField(primary_key=True)
+    guild = peewee.ForeignKeyField(Guild, null=False)
+    expiration = peewee.TimestampField(null=True)
+    author = peewee.ForeignKeyField(User, null=False)
+    name = peewee.TextField(null=False)
+
+    class Meta:
+        indexes = (
+            (('name', 'guild'), True),
+        )
+
+
+class Task(BaseModel):
+    identity = peewee.AutoField(primary_key=True)
+    task_number = peewee.IntegerField(null=False)
+    schedule = peewee.ForeignKeyField(Schedule, null=False)
+    text = peewee.TextField(null=False)
+    executor = peewee.ForeignKeyField(User, null=False)
+
+
 Guild.create_table()
 User.create_table()
 Warn.create_table()
@@ -154,3 +175,5 @@ Role.create_table()
 Clan.create_table()
 ClanMember.create_table()
 VoiceJournal.create_table()
+Schedule.create_table()
+Task.create_table()
