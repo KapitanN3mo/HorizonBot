@@ -374,7 +374,7 @@ class RoleCommands(commands.Cog):
 
     @commands.Cog.listener()
     async def on_raw_reaction_remove(self, event: disnake.RawReactionActionEvent):
-        if event.member.id == self.bot.user.id:
+        if event.user_id == self.bot.user.id:
             return
         guild = self.bot.get_guild(event.guild_id)
         channel = self.bot.get_channel(event.channel_id)
