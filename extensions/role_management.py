@@ -46,7 +46,14 @@ class RMS(commands.Cog):
             return False, 'Блок не найден'
         if cls.check_emoji(db_block, emoji):
             return False, 'Этот эмодзи уже используется в этом блоке'
+        try:
+            role_pos = sorted(
+                [role.position for role in database.Role.select().where(database.Role.linked_block == db_block)])[
+                           -1] + 1
+        except IndexError:
+            role_pos = 0
         db_role.linked_block = db_block
+        db_role.position = role_pos
         db_role.save()
         cls.bot.loop.create_task(cls.update_block(db_role.linked_block))
         return True, None
@@ -160,7 +167,8 @@ class RMS(commands.Cog):
         guild = cls.bot.get_guild(block.guild.guild_id)
         emb = disnake.Embed(title=block.name, description='', colour=block.color)
         react_list = []
-        for role in database.Role.select().where(database.Role.linked_block == block):
+        for role in sorted([role for role in database.Role.select().where(database.Role.linked_block == block)],
+                           key=lambda role: role.position):
             ds_role = guild.get_role(role.role_id)
             if ds_role is None:
                 return False, f'Роль {role.name} не найдена!', None
@@ -326,6 +334,7 @@ class RoleCommands(commands.Cog):
     @admin_permission_required
     async def show_block(self, inter: disnake.CommandInteraction, block_id: int, channel: disnake.TextChannel):
         """Включить блок"""
+        await inter.response.defer()
         guild = inter.guild
         block = database.RoleBlock.get_or_none(database.RoleBlock.block_id == block_id,
                                                database.RoleBlock.guild == guild.id)
