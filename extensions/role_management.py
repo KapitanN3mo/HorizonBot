@@ -450,7 +450,7 @@ class BlockCreteModal(disnake.ui.Modal):
         name = interaction.text_values['name']
         color = interaction.text_values['color']
         RMS.new_block(interaction.guild, name=name, color=color)
-        await interaction.send(f'{emojis.white_check_mark}`Блок {name} создан!`')
+        await interaction.send(f'{emojis.white_check_mark}`Блок {name} создан!`',ephemeral=True, delete_after=2)
 
 
 def setup(bot):
