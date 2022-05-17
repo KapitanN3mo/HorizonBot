@@ -68,6 +68,7 @@ class Role(BaseModel):
     guild = peewee.ForeignKeyField(Guild, null=False)
     name = peewee.TextField(null=False)
     linked_block = peewee.ForeignKeyField(RoleBlock, null=True)
+    position = peewee.IntegerField(null=True)
     color = peewee.TextField(null=False)
     emoji = peewee.TextField(null=True)
     having_users = peewee.TextField(null=False)
