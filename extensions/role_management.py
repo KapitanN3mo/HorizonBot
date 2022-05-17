@@ -174,6 +174,7 @@ class RMS(commands.Cog):
                 return False, f'Роль {role.name} не найдена!', None
             emb.description += f'{role.emoji}:{ds_role.mention}\n'
             react_list.append(role.emoji)
+            emb.set_footer(text=f'Блок #{block.block_id}', icon_url=cls.bot.user.display_avatar.url)
         return True, emb, react_list
 
     @classmethod
