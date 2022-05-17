@@ -271,7 +271,7 @@ class RoleCommands(commands.Cog):
         """Отключить роль от RMS"""
         res, data = RMS.disconnect_role(role)
         if res:
-            await inter.send(f'{emojis.white_check_mark} `Роль удалена`')
+            await inter.send(f'{emojis.white_check_mark} `Роль удалена`',ephemeral=True, delete_after=2)
         else:
             await inter.send(f'{emojis.exclamation}`{data}`')
 
@@ -281,7 +281,7 @@ class RoleCommands(commands.Cog):
         """Удаление блока"""
         result, com = await RMS.remove_block(inter.guild, block_id)
         if result:
-            await inter.send(f'{emojis.white_check_mark}`Блок #{block_id} успешно удалён`')
+            await inter.send(f'{emojis.white_check_mark}`Блок #{block_id} успешно удалён`',ephemeral=True, delete_after=2)
         else:
             await inter.send(f'При удалении блока произошла ошибка: {com}')
 
@@ -297,7 +297,7 @@ class RoleCommands(commands.Cog):
         """Подключить роль к RMS"""
         result, info = RMS.connect_role(inter.guild, role, role_block_id, emoji)
         if result:
-            await inter.send(f'{emojis.white_check_mark} `Роль добавлена!`')
+            await inter.send(f'{emojis.white_check_mark} `Роль добавлена!`',ephemeral=True, delete_after=2)
         else:
             await inter.send(f'{emojis.exclamation}`При подключении произошла ошибка: {info}`')
 
@@ -329,7 +329,7 @@ class RoleCommands(commands.Cog):
             await inter.send(f"{emojis.exclamation}`Сообщение не найдено не найден`")
             return
         await mes.delete()
-        await inter.send(f'{emojis.white_check_mark}`Блок {role_block.name}#{role_block.block_id} скрыт!`')
+        await inter.send(f'{emojis.white_check_mark}`Блок {role_block.name}#{role_block.block_id} скрыт!`',ephemeral=True, delete_after=2)
 
     @commands.slash_command()
     @admin_permission_required
@@ -351,7 +351,7 @@ class RoleCommands(commands.Cog):
             return
         res, data = await RMS.send_block_message(block, channel)
         if res:
-            await inter.send(f'{emojis.white_check_mark}`Выполнено!`')
+            await inter.send(f'{emojis.white_check_mark}`Выполнено!`',ephemeral=True, delete_after=2)
         else:
             await inter.send(f'{emojis.exclamation}`Произошла ошибка:`{data}')
 
