@@ -202,7 +202,7 @@ class FunCommands(commands.Cog):
         await inter.send(embed=emb)
 
     @commands.slash_command()
-    async def gachi(self, inter: disnake.CommandInteraction):
+    async def gachi_party(self, inter: disnake.CommandInteraction):
         """Ты же хочешь этого, сладенький?"""
         participants = [inter.author]
         emb = disnake.Embed(title='🎉 🎉 :male_sign: **ОБЪЯВЛЯЕМ ГАЧИ ВЕЧЕРИНКУ!!!** :male_sign: 🎉 🎉',

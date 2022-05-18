@@ -58,6 +58,7 @@ class Bot:
                 cls.bot.load_extension(f'extensions.{module.replace(".py", "")}')
         ft = cls.bot.loop.create_task(cls._cleaning_garbage())
         cls.start_time = dt.get_msk_datetime()
+        print(len(cls.bot.slash_commands))
         cls.bot.run(token)
 
     @classmethod

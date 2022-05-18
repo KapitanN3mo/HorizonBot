@@ -1,3 +1,4 @@
+import datetime
 import os
 import platform
 import peewee
@@ -29,11 +30,33 @@ class Guild(BaseModel):
     clan_channel = peewee.BigIntegerField(null=True)
     bot_channel = peewee.BigIntegerField(null=True)
     private_voice = peewee.BigIntegerField(null=True)
+
     minimum_voice_time = peewee.IntegerField(null=False, default=10)
     xp_voice_multiplier = peewee.FloatField(null=False, default=1)
     xp_message_multiplier = peewee.FloatField(null=False, default=1)
-    day_message = peewee.IntegerField(null=True)
-    webhook = peewee.TextField(null=True)
+
+    min_work_cash = peewee.IntegerField(default=100)
+    max_work_cash = peewee.IntegerField(default=400)
+    work_delay = peewee.IntegerField(default=30)
+
+    min_gachi_cash = peewee.IntegerField(default=1000)
+    max_gachi_cash = peewee.IntegerField(default=5000)
+    gachi_delay = peewee.IntegerField(default=60)
+    gachi_delay_after_fail = peewee.IntegerField(default=1440)
+    ass_breaking_chance = peewee.IntegerField(default=80)
+
+    min_crime_cash = peewee.IntegerField(default=500)
+    max_crime_cash = peewee.IntegerField(default=1000)
+    crime_delay = peewee.IntegerField(default=180)
+    crime_fail_chance = peewee.IntegerField(default=30)
+
+    steal_fail_chance = peewee.IntegerField(default=50)
+    max_steal_fail_loss = peewee.IntegerField(default=100)
+    min_steal_fail_loss = peewee.IntegerField(default=30)
+    max_steal_lucky_loss = peewee.IntegerField(default=100)
+    min_steal_lucky_loss = peewee.IntegerField(default=50)
+
+    coin_name = peewee.TextField(default='Coin')
 
 
 class User(BaseModel):
@@ -45,6 +68,14 @@ class User(BaseModel):
     in_voice_time = peewee.IntegerField(null=False)
     send_voice_report = peewee.BooleanField(default=True)
     discord_name = peewee.TextField(null=False)
+
+    money = peewee.IntegerField(default=0, null=False)
+    bank = peewee.BigIntegerField(default=0)
+
+    last_work_use = peewee.TimestampField(null=False, default=0)
+    last_gachi_use = peewee.TimestampField(null=False, default=0)
+    last_crime_use = peewee.TimestampField(null=False, default=0)
+    is_ass_breaking = peewee.BooleanField(null=False, default=False)
 
     class Meta:
         table_name = 'users'
