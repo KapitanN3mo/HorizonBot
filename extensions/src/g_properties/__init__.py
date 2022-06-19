@@ -1,4 +1,4 @@
-from extensions.bin.g_properties.guild_properties import *
+from extensions.src.g_properties.guild_properties import *
 from disnake.ext import commands
 
 g_properties = [

@@ -1,7 +1,7 @@
 from assets import emojis
 import disnake
 from permissions import admin_permission_required
-from extensions.bin import g_properties
+from extensions.src import g_properties
 from disnake.ext import commands
 from typing import List
 
