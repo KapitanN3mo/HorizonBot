@@ -7,8 +7,20 @@ import core
 import database
 from assets import emojis
 
+task_status = {'created': '🟡',
+               'on_work': '📝',
+               'complete': '✅',
+               'canceled': '❌',
+               'on_pause': '⏸'}
+status_translate = {'created': 'Добавлена',
+                    'on_work': 'В работе',
+                    'complete': 'Готова',
+                    'canceled': 'Отменена',
+                    'on_pause': 'Приостановлена'}
+
 
 class Scheduler(commands.Cog):
+
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
@@ -36,43 +48,17 @@ class Scheduler(commands.Cog):
     @commands.slash_command()
     @admin_permission_required
     async def scheduler(self, inter: disnake.CommandInteraction):
-        view = SchedulerView(inter.guild)
+        view = MainTaskView(inter.guild)
         view.interaction = inter
         await inter.send(view=view, embed=view.emb)
 
     @commands.slash_command()
     @admin_permission_required
-    async def edit_task(self, inter: disnake.CommandInteraction, schedule_name: str,
-                        task_id: int,
-                        new_executor: disnake.Member = None,
-                        new_text: str = None):
-        if new_text is None and new_executor is None:
-            await inter.send(f'Нет изменений')
-            return
-        schedule = database.Schedule.get_or_none(database.Schedule.name == schedule_name,
-                                                 database.Schedule.guild == inter.id)
-        if schedule is None:
-            await inter.send(f'План с именем {schedule_name} не обнаружен')
-            return
-        task = database.Task.get_or_none(database.Task.schedule == schedule, database.Task.task_number == task_id)
-        if task is None:
-            await inter.send('Такой задачи нет')
-        else:
-            if new_executor is not None:
-                task.executor = database.User.get(database.User.user_id == new_executor.id,
-                                                  database.User.guild_id == inter.guild_id)
-            if new_text is not None:
-                task.text = new_text
-            task.save()
-            await inter.send('Задача изменена')
-
-    @commands.slash_command()
-    @admin_permission_required
     async def create_task(self, inter: disnake.CommandInteraction, block_name: str, executor: disnake.Member,
                           text: str):
-        tasks = [*database.Schedule.select().where(database.Schedule.guild == inter.guild_id,
-                                                   database.Schedule.get(database.Schedule.guild == inter.guild_id,
-                                                                         database.Schedule.name == block_name))]
+        tasks = [*database.Task.select().where(
+            database.Task.schedule == database.Schedule.get(database.Schedule.guild == inter.guild_id,
+                                                            database.Schedule.name == block_name))]
         start_number = -1
         if len(tasks) > 0:
             start_number = sorted(tasks, key=lambda task: task.task_number)[-1].task_number
@@ -83,6 +69,7 @@ class Scheduler(commands.Cog):
             text=text,
             task_number=start_number + 1,
             executor=database.User.get(database.User.guild_id == inter.guild_id, database.User.user_id == executor.id),
+            author=database.User.get(database.User.guild_id == inter.guild_id, database.User.user_id == inter.author.id)
         ).execute()
         await inter.send('Ok', ephemeral=True)
 
@@ -93,37 +80,35 @@ class Scheduler(commands.Cog):
                 string in block.name]
 
 
-class SchedulerView(disnake.ui.View):
+class MainTaskView(disnake.ui.View):
     def __init__(self, guild: disnake.Guild):
-        super(SchedulerView, self).__init__()
+        super(MainTaskView, self).__init__()
         self.interaction = None
         self.guild = guild
-        self.schedules = []
         self.emb = disnake.Embed()
+
+        self.next_button = disnake.ui.Button(style=disnake.ButtonStyle.blurple, emoji='▶', row=0)
+        self.next_button.callback = self.next_button_callback
+        self.back_button = disnake.ui.Button(style=disnake.ButtonStyle.blurple, emoji='◀', row=0)
+        self.back_button.callback = self.back_button_callback
+        self.update_button = disnake.ui.Button(style=disnake.ButtonStyle.green, emoji='🔁', row=0)
+        self.update_button.callback = self.update_callback
+        self.set_user_filter_button = disnake.ui.Button(style=disnake.ButtonStyle.green, emoji='👁', row=1)
+        self.set_user_filter_button.callback = self.set_user_filter_callback
+        self.reset_user_filter_button = disnake.ui.Button(style=disnake.ButtonStyle.gray, emoji='👁', row=1)
+        self.reset_user_filter_button.callback = self.set_user_filter_callback
+        self.edit_button = disnake.ui.Button(style=disnake.ButtonStyle.red, emoji='📝', row=1)
+        self.edit_button.callback = self.edit_callback
+
         self.index = 0
-        self.next_button = disnake.ui.Button(style=disnake.ButtonStyle.blurple, emoji='▶')
-        self.next_button.callback = self.next_button
-        self.back_button = disnake.ui.Button(style=disnake.ButtonStyle.blurple, emoji='◀')
-        self.back_button.callback = self.back_button
+        self.user_filter = None
         self.render()
 
-    def render(self):
+    def gen_embed(self, schedules):
         emb = disnake.Embed(color=disnake.Color.red(), description='')
-        schedules = [*database.Schedule.select().where(database.Schedule.guild == self.guild.id)]
         if len(schedules) == 0:
             emb.description = "Планов нет"
         else:
-            self.clear_items()
-            self.next_button.disabled = True
-            self.next_button.callback = self.next_callback
-            self.back_button.disabled = True
-            self.back_button.callback = self.back_callback
-            if 0 < self.index:
-                self.back_button.disabled = False
-            elif self.index < len(schedules) - 1:
-                self.next_button.disabled = False
-            self.add_item(self.back_button)
-            self.add_item(self.next_button)
             schedule = schedules[self.index]
             tasks = [*database.Task.select().where(database.Task.schedule == schedule)]
             counter = 0
@@ -137,20 +122,66 @@ class SchedulerView(disnake.ui.View):
             else:
                 for task in tasks:
                     executor = self.guild.get_member(task.executor.user_id)
-                    emb.description += f'```[{counter}] Задача для {executor.display_name}\n-> {task.text}\n```'
+                    if self.user_filter is not None and self.user_filter.id != executor.id:
+                        continue
+                    emb.description += f'```[{counter}] Задача для {executor.display_name}\n-> {task.text} [{task_status[task.status]}]\n```'
                     counter += 1
+                if counter == 0:
+                    emb.description = '```В этом плане нет задач для вас```'
             emb.add_field(name="Срок", value=f'```{(schedule.expiration - datetime.datetime.now()).days} дней```')
-
         self.emb = emb
 
-    async def next_callback(self, inter: disnake.MessageInteraction):
+    def render(self):
+        schedules = [*database.Schedule.select().where(database.Schedule.guild == self.guild.id)]
+        self.gen_embed(schedules)
+        self.clear_items()
+        if len(schedules) > 0:
+            self.next_button.disabled = True
+            self.back_button.disabled = True
+            if 0 < self.index:
+                self.back_button.disabled = False
+            elif self.index < len(schedules) - 1:
+                self.next_button.disabled = False
+            self.add_item(self.back_button)
+            self.add_item(self.next_button)
+        self.add_item(self.update_button)
+        if self.user_filter is None:
+            self.add_item(self.set_user_filter_button)
+        else:
+            self.add_item(self.reset_user_filter_button)
+        self.add_item(self.edit_button)
+
+    async def set_user_filter_callback(self, inter: disnake.MessageInteraction):
+        await inter.response.defer()
+        self.user_filter = inter.author
+        self.render()
+        await inter.edit_original_message(view=self, embed=self.emb)
+
+    async def reset_filter_callback(self, inter: disnake.MessageInteraction):
+        await inter.response.defer()
+        self.user_filter = None
+        self.render()
+        await inter.edit_original_message(view=self, embed=self.emb)
+
+    async def edit_callback(self, inter: disnake.MessageInteraction):
+        await inter.response.defer()
+        self.user_filter = inter.author
+        self.render()
+        await inter.edit_original_message(view=self, embed=self.emb)
+
+    async def update_callback(self, inter: disnake.MessageInteraction):
+        await inter.response.defer()
+        self.render()
+        await inter.edit_original_message(view=self, embed=self.emb)
+
+    async def next_button_callback(self, inter: disnake.MessageInteraction):
         await inter.response.defer()
         self.index += 1
         self.render()
         await inter.edit_original_message(view=self, embed=self.emb)
         self.interaction = inter
 
-    async def back_callback(self, inter: disnake.MessageInteraction):
+    async def back_button_callback(self, inter: disnake.MessageInteraction):
         await inter.response.defer()
         self.index -= 1
         self.render()
@@ -164,6 +195,64 @@ class SchedulerView(disnake.ui.View):
             except:
                 pass
         await self.interaction.edit_original_message(view=self, embed=self.emb)
+
+
+class TaskEditView(disnake.ui.View):
+    def __init__(self, task: database.Task, inter: disnake.MessageInteraction):
+        super(TaskEditView, self).__init__()
+        self.task = task
+        self.inter = inter
+        self.guild = inter.guild
+        self.embed = disnake.Embed()
+
+    def gen_embed(self):
+        emb = disnake.Embed()
+        emb.set_author(name=self.inter.author.display_name, icon_url=self.inter.author.display_avatar)
+        emb.description = f'```{self.task.text}```'
+        emb.add_field(name='Статус', value=f'[{task_status[self.task.status]}] - {status_translate[self.task.status]}')
+        emb.add_field(name='Исполнитель', value=self.guild.get_member(self.task.executor.user_id))
+        self.embed = emb
+
+    @disnake.ui.button(style=disnake.ButtonStyle.red, emoji=task_status['canceled'], row=0)
+    async def set_canceled_status_button(self, button: disnake.ui.Button, inter: disnake.MessageInteraction):
+        pass
+
+    @disnake.ui.button(style=disnake.ButtonStyle.gray, emoji=task_status['on_work'], row=0)
+    async def set_on_work_status_button(self, button: disnake.ui.Button, inter: disnake.MessageInteraction):
+        pass
+
+    @disnake.ui.button(style=disnake.ButtonStyle.gray, emoji=task_status['on_pause'], row=0)
+    async def set_on_pause_status_button(self, button: disnake.ui.Button, inter: disnake.MessageInteraction):
+        pass
+
+    @disnake.ui.button(style=disnake.ButtonStyle.green, emoji=task_status['complete'], row=0)
+    async def set_complete_status_button(self, button: disnake.ui.Button, inter: disnake.MessageInteraction):
+        pass
+
+    @disnake.ui.button(style=disnake.ButtonStyle.blurple, emoji='🤝', row=1)
+    async def change_executor_button(self, button: disnake.ui.Button, inter: disnake.MessageInteraction):
+        pass
+
+    @disnake.ui.button(style=disnake.ButtonStyle.blurple, emoji='📝', row=1)
+    async def edit_task_text_button(self, button: disnake.ui.Button, inter: disnake.MessageInteraction):
+        pass
+
+    def render(self):
+        pass
+
+
+class EditTaskDataModal(disnake.ui.Modal):
+    def __init__(self, task: database.Task):
+        components = [
+            disnake.ui.TextInput(
+                label='Задание',
+                custom_id='task_text',
+                style=disnake.TextInputStyle.long,
+                value=task.text,
+                required=True
+            )
+        ]
+        super(EditTaskDataModal, self).__init__()
 
 
 def setup(bot):
