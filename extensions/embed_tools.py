@@ -42,6 +42,7 @@ class EmbedTools(commands.Cog):
     @commands.slash_command()
     @permissions.admin_permission_required
     async def create_emb(self, inter: disnake.CommandInteraction, title: str, color: str):
+        """Создать новый embed"""
         try:
             color = int(color.replace('#', '0x'), 16)
         except:
@@ -57,6 +58,7 @@ class EmbedTools(commands.Cog):
     @commands.slash_command()
     @permissions.admin_permission_required
     async def set_description(self, inter, text: str):
+        """Установить описание"""
         res, msg = await self.find_message(inter)
         if res:
             emb = msg.embeds[0]
@@ -68,6 +70,7 @@ class EmbedTools(commands.Cog):
     @commands.slash_command()
     @permissions.admin_permission_required
     async def set_footer(self, inter, show_author: bool, show_timestamp: bool, text: str = None):
+        """Установить footer"""
         res, msg = await self.find_message(inter)
         if res:
             emb = msg.embeds[0]
@@ -81,6 +84,7 @@ class EmbedTools(commands.Cog):
     @commands.slash_command()
     @permissions.admin_permission_required
     async def append_desc(self, inter, text: str):
+        """Добавить в описание"""
         res, msg = await self.find_message(inter)
         if res:
             emb = msg.embeds[0]
@@ -92,6 +96,7 @@ class EmbedTools(commands.Cog):
     @commands.slash_command()
     @permissions.admin_permission_required
     async def set_color(self, inter, color: str):
+        """Установить новый цвет"""
         res, msg = await self.find_message(inter)
         if res:
             emb = msg.embeds[0]
@@ -106,6 +111,7 @@ class EmbedTools(commands.Cog):
     @commands.slash_command()
     @permissions.admin_permission_required
     async def set_title(self, inter, title: str):
+        """Установить название"""
         res, msg = await self.find_message(inter)
         if res:
             emb = msg.embeds[0]
@@ -117,6 +123,7 @@ class EmbedTools(commands.Cog):
     @commands.slash_command()
     @permissions.admin_permission_required
     async def get_color(self, inter, msg_id: commands.LargeInt):
+        """Посмотреть цвет"""
         try:
             channel = self.bot.get_channel(inter.channel_id)
             msg = await channel.fetch_message(msg_id)
@@ -131,23 +138,13 @@ class EmbedTools(commands.Cog):
     @commands.slash_command()
     @commands.has_permissions(administrator=True)
     async def select(self, inter, msg_id: commands.LargeInt):
+        """Выбрать Embed для редактирования"""
         self.embeds[f'{inter.guild.id}{inter.user.id}'] = msg_id
         res, msg = await self.find_message(inter)
         if res:
             await inter.send('Ok', ephemeral=True)
         else:
             del self.embeds[f'{inter.guild.id}{inter.user.id}']
-
-    @commands.slash_command()
-    @permissions.admin_permission_required
-    async def set_description(self, inter, text: str):
-        res, msg = await self.find_message(inter)
-        if res:
-            emb = msg.embeds[0]
-            emb.description = text
-            await msg.edit(embed=emb)
-            self.add_history(msg.id, emb)
-            await inter.send('ok', ephemeral=True)
 
 
 def setup(bot):
