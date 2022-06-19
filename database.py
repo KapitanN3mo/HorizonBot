@@ -194,6 +194,8 @@ class Task(BaseModel):
     schedule = peewee.ForeignKeyField(Schedule, null=False)
     text = peewee.TextField(null=False)
     executor = peewee.ForeignKeyField(User, null=False)
+    status = peewee.TextField(null=False, default='created')
+    author = peewee.ForeignKeyField(User, null=False)
 
 
 Guild.create_table()
