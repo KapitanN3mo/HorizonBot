@@ -15,8 +15,11 @@ db.autorollback = True
 class BaseModel(peewee.Model):
     class Meta:
         database = db
+
+
 def get_time():
     return datetime.datetime.now(tz=pytz.utc)
+
 
 class Guild(BaseModel):
     guild_id = peewee.BigIntegerField(primary_key=True)
@@ -165,13 +168,9 @@ class ClanMember(BaseModel):
     class_ = peewee.TextField(null=False)
 
 
-
-
-
 class VoiceJournal(BaseModel):
     identity = peewee.BigAutoField()
     user = peewee.ForeignKeyField(User, null=False)
-    timestamp = peewee.DateTimeField(default=get_time)
     data = peewee.TextField(null=False)
 
 
