@@ -15,7 +15,8 @@ db.autorollback = True
 class BaseModel(peewee.Model):
     class Meta:
         database = db
-
+def get_time():
+    return datetime.datetime.now(tz=pytz.utc)
 
 class Guild(BaseModel):
     guild_id = peewee.BigIntegerField(primary_key=True)
@@ -104,7 +105,7 @@ class Role(BaseModel):
 class MarryPartner(BaseModel):
     user1 = peewee.ForeignKeyField(User, null=False)
     user2 = peewee.ForeignKeyField(User, null=False)
-    date = peewee.DateTimeField(null=False, default=datetime.datetime.utcnow)
+    date = peewee.DateTimeField(null=False, default=get_time)
 
 
 class Warn(BaseModel):
@@ -146,7 +147,7 @@ class Clan(BaseModel):
     color = peewee.IntegerField(null=False)
     description = peewee.TextField(null=False)
     emblem = peewee.TextField(null=False)
-    created_date = peewee.DateTimeField(default=datetime.datetime.utcnow, null=False)
+    created_date = peewee.DateTimeField(default=get_time, null=False)
     level = peewee.IntegerField(null=False, default=0)
     verify = peewee.BooleanField(null=False, default=False)
     verify_issuing = peewee.ForeignKeyField(User, null=True)
@@ -164,10 +165,13 @@ class ClanMember(BaseModel):
     class_ = peewee.TextField(null=False)
 
 
+
+
+
 class VoiceJournal(BaseModel):
     identity = peewee.BigAutoField()
     user = peewee.ForeignKeyField(User, null=False)
-    timestamp = peewee.DateTimeField(default=datetime.datetime.utcnow)
+    timestamp = peewee.DateTimeField(default=get_time)
     data = peewee.TextField(null=False)
 
 
