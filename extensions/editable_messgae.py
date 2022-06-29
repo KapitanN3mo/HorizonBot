@@ -1,6 +1,7 @@
+import datetime
+import pytz
 from disnake.ext import commands
 import disnake
-
 import database
 from permissions import admin_permission_required
 from assets import emojis
@@ -20,7 +21,8 @@ class EditableMessage(commands.Cog):
             message_id=mes.id,
             guild_id=ctx.guild.id,
             channel_id=channel.id,
-            author_id=database.User.get(database.User.guild_id == ctx.guild.id, database.User.user_id == ctx.author.id)
+            author_id=database.User.get(database.User.guild_id == ctx.guild.id, database.User.user_id == ctx.author.id),
+            send_time=datetime.datetime.now(tz=pytz.UTC)
         ).execute()
 
     @commands.command()

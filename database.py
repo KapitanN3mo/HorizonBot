@@ -1,3 +1,5 @@
+import datetime
+import pytz
 import peewee
 import dt
 
@@ -6,6 +8,8 @@ db = peewee.PostgresqlDatabase(host='127.0.0.1',
                                database='horizon_bot',
                                user='horizon_bot',
                                password='s24d300')
+
+db.autorollback = True
 
 
 class BaseModel(peewee.Model):
@@ -63,9 +67,11 @@ class User(BaseModel):
     money = peewee.IntegerField(default=0, null=False)
     bank = peewee.BigIntegerField(default=0)
 
-    last_work_use = peewee.TimestampField(null=False, default=0)
-    last_gachi_use = peewee.TimestampField(null=False, default=0)
-    last_crime_use = peewee.TimestampField(null=False, default=0)
+    last_work_use = peewee.DateTimeField(null=False, default=datetime.datetime(2000, 1, 1, 1, 1, 1, 1, tzinfo=pytz.utc))
+    last_gachi_use = peewee.DateTimeField(null=False,
+                                          default=datetime.datetime(2000, 1, 1, 1, 1, 1, 1, tzinfo=pytz.utc))
+    last_crime_use = peewee.DateTimeField(null=False,
+                                          default=datetime.datetime(2000, 1, 1, 1, 1, 1, 1, tzinfo=pytz.utc))
     is_ass_breaking = peewee.BooleanField(null=False, default=False)
 
     class Meta:
@@ -79,7 +85,6 @@ class RoleBlock(BaseModel):
     block_id = peewee.AutoField(primary_key=True)
     name = peewee.TextField(null=False)
     color = peewee.IntegerField(null=False)
-    style = peewee.TextField(null=True)
     guild = peewee.ForeignKeyField(Guild, null=False)
     block_channel_id = peewee.BigIntegerField(null=True)
     block_message_id = peewee.BigIntegerField(null=True, unique=True)
@@ -99,7 +104,7 @@ class Role(BaseModel):
 class MarryPartner(BaseModel):
     user1 = peewee.ForeignKeyField(User, null=False)
     user2 = peewee.ForeignKeyField(User, null=False)
-    date = peewee.TimestampField(null=False, default=dt.get_msk_datetime())
+    date = peewee.DateTimeField(null=False, default=datetime.datetime.utcnow)
 
 
 class Warn(BaseModel):
@@ -108,7 +113,7 @@ class Warn(BaseModel):
     user_db_id = peewee.ForeignKeyField(User, null=False, column_name='user_id')
     owner_id = peewee.ForeignKeyField(User, null=False, column_name='owner_id')
     reason = peewee.TextField(null=False, column_name='reason')
-    datetime = peewee.TimestampField(null=False, column_name='datetime')
+    datetime = peewee.DateTimeField(null=False, column_name='datetime')
     expiration = peewee.IntegerField(null=False, column_name='expiration')
 
 
@@ -117,7 +122,7 @@ class TextBotMessage(BaseModel):
     guild_id = peewee.ForeignKeyField(Guild, column_name='guild_id', null=False)
     channel_id = peewee.BigIntegerField(column_name='channel_id', null=False)
     author_id = peewee.ForeignKeyField(User, column_name='owner_id', null=False)
-    send_time = peewee.TimestampField(column_name='send_time', default=dt.get_msk_datetime())
+    send_time = peewee.DateTimeField(column_name='send_time')
 
 
 class ApiUser(BaseModel):
@@ -141,7 +146,7 @@ class Clan(BaseModel):
     color = peewee.IntegerField(null=False)
     description = peewee.TextField(null=False)
     emblem = peewee.TextField(null=False)
-    created_date = peewee.TimestampField(default=dt.get_msk_datetime(), null=False)
+    created_date = peewee.DateTimeField(default=datetime.datetime.utcnow, null=False)
     level = peewee.IntegerField(null=False, default=0)
     verify = peewee.BooleanField(null=False, default=False)
     verify_issuing = peewee.ForeignKeyField(User, null=True)
@@ -162,14 +167,14 @@ class ClanMember(BaseModel):
 class VoiceJournal(BaseModel):
     identity = peewee.BigAutoField()
     user = peewee.ForeignKeyField(User, null=False)
-    timestamp = peewee.TimestampField(default=dt.get_msk_datetime())
+    timestamp = peewee.DateTimeField(default=datetime.datetime.utcnow)
     data = peewee.TextField(null=False)
 
 
 class Schedule(BaseModel):
     identity = peewee.AutoField(primary_key=True)
     guild = peewee.ForeignKeyField(Guild, null=False)
-    expiration = peewee.TimestampField(null=True)
+    expiration = peewee.DateTimeField(null=True)
     author = peewee.ForeignKeyField(User, null=False)
     name = peewee.TextField(null=False)
 

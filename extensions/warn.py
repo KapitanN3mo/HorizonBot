@@ -1,6 +1,9 @@
 import asyncio
 import datetime
 import traceback
+
+import pytz
+
 from core import events
 import core
 import database
@@ -67,7 +70,7 @@ class WarnModule(commands.Cog):
             warn.user_db_id = db_user.user_db_id
             warn.owner_id = db_author.user_db_id
             warn.reason = reason
-            warn.datetime = get_msk_datetime()
+            warn.datetime = datetime.datetime.now(tz=pytz.UTC)
             warn.expiration = expiration
             warn.save()
         except Exception as ex:
@@ -150,7 +153,7 @@ class WarnModule(commands.Cog):
             owner = warn.owner_id.user_id
             issue_time: datetime.datetime = warn.datetime
             expiration = warn.expiration
-            expiration_time = issue_time + datetime.timedelta(days=expiration) - datetime.datetime.now()
+            expiration_time = issue_time + datetime.timedelta(days=expiration) - datetime.datetime.now(tz=pytz.UTC)
             reason = warn.reason
             owner = self.bot.get_user(owner)
             user_name = self.bot.get_user(user_id)
@@ -209,7 +212,7 @@ class WarnModule(commands.Cog):
                     database.Warn.delete().where(database.Warn.guild_id == guild.id).execute()
                 warns = database.Warn.select().where(database.Warn.guild_id == guild.id)
                 for warn in warns:
-                    if (warn.datetime + datetime.timedelta(days=warn.expiration)) < dt.get_msk_datetime():
+                    if (warn.datetime + datetime.timedelta(days=warn.expiration)) < datetime.datetime.now(tz=pytz.UTC):
                         db_channel = guild.get_channel(db_guild.notify_channel)
                         channel = db_channel if db_channel is not None else guild.system_channel
                         user = guild.get_member(database.User.get(database.User.user_db_id == warn.user_db_id).user_id)

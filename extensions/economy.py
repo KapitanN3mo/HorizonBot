@@ -1,5 +1,8 @@
 import datetime
 import random
+
+import pytz
+
 from assets import economy
 import disnake
 from disnake.ext import commands
@@ -36,7 +39,7 @@ class Economy(commands.Cog):
         db_guild: database.Guild = database.Guild.get(database.Guild.guild_id == inter.guild_id)
         db_user: database.User = database.User.get(database.User.user_id == inter.author.id,
                                                    database.User.guild_id == inter.guild_id)
-        delta: datetime.timedelta = datetime.datetime.now() - db_user.last_work_use
+        delta: datetime.timedelta = datetime.datetime.now(tz=pytz.UTC) - db_user.last_work_use
         if delta.seconds < (db_guild.work_delay * 60):
             seconds1 = db_guild.work_delay * 60 - delta.seconds
             minutes = seconds1 // 60
@@ -69,7 +72,8 @@ class Economy(commands.Cog):
             delay = db_guild.gachi_delay_after_fail
         else:
             delay = db_guild.gachi_delay
-
+        print(delta.seconds)
+        print(delay * 60)
         if delta.seconds < (delay * 60):
             seconds1 = delay * 60 - delta.seconds
             minutes = seconds1 // 60
@@ -98,6 +102,7 @@ class Economy(commands.Cog):
                 db_user.is_ass_breaking = False
                 emb.colour = disnake.Colour(0x66BB6A)
                 money = random.randint(db_guild.min_gachi_cash, db_guild.max_gachi_cash)
+                db_user.money += money
                 emb.set_footer(text=f'Запрос №{self._transaction_counter}')
                 emb.description = f'Вы успешно прошли все испытания Dungeon Master-а и заработали {money} {db_guild.coin_name}'
                 await inter.send(embed=emb)
@@ -135,7 +140,7 @@ class Economy(commands.Cog):
         emb.description = phrase['text'].replace('MONEY', str(cash)).replace('COIN', db_guild.coin_name)
         emb.set_footer(text=f'Запрос №{self._transaction_counter}')
         db_user.last_crime_use = datetime.datetime.now()
-        # db_user.save()
+        db_user.save()
         await inter.send(embed=emb)
 
     @commands.slash_command()

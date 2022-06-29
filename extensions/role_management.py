@@ -89,7 +89,6 @@ class RMS(commands.Cog):
             database.RoleBlock.insert(
                 name=name,
                 color=color,
-                style='numeric',
                 guild=guild.id,
             ).execute()
             return True, None
