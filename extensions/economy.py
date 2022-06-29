@@ -67,14 +67,12 @@ class Economy(commands.Cog):
         db_guild: database.Guild = database.Guild.get(database.Guild.guild_id == inter.guild_id)
         db_user: database.User = database.User.get(database.User.user_id == inter.author.id,
                                                    database.User.guild_id == inter.guild_id)
-        delta: datetime.timedelta = datetime.datetime.now() - db_user.last_gachi_use
+        delta: datetime.timedelta = datetime.datetime.now(tz=pytz.UTC) - db_user.last_gachi_use.astimezone(tz=pytz.UTC)
         if db_user.is_ass_breaking:
             delay = db_guild.gachi_delay_after_fail
         else:
             delay = db_guild.gachi_delay
-        print(delta.seconds)
-        print(delay * 60)
-        if delta.seconds < (delay * 60):
+        if delta.total_seconds() < (delay * 60):
             seconds1 = delay * 60 - delta.seconds
             minutes = seconds1 // 60
             seconds = seconds1 % 60

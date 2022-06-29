@@ -1,13 +1,8 @@
 import asyncio
 import datetime
 import traceback
-
 import pytz
-
-from core import events
-import core
 import database
-import dt
 from dt import get_str_msk_datetime, get_msk_datetime
 import disnake
 from disnake.ext import commands
