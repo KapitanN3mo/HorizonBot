@@ -153,7 +153,8 @@ class WarnModule(commands.Cog):
             owner = warn.owner_id.user_id
             issue_time: datetime.datetime = warn.datetime
             expiration = warn.expiration
-            expiration_time = issue_time + datetime.timedelta(days=expiration) - datetime.datetime.now(tz=pytz.UTC)
+            expiration_time = issue_time.astimezone(tz=pytz.UTC) + datetime.timedelta(
+                days=expiration) - datetime.datetime.now(tz=pytz.UTC)
             reason = warn.reason
             owner = self.bot.get_user(owner)
             user_name = self.bot.get_user(user_id)
