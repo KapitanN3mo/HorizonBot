@@ -58,6 +58,7 @@ class WarnModule(commands.Cog):
     @commands.slash_command()
     @admin_permission_required
     async def warn(self, inter: disnake.CommandInteraction, user: disnake.User, expiration: int, reason: str):
+        """Выдать варн"""
         try:
             db_user = database.User.get_or_none(database.User.user_id == user.id,
                                                 database.User.guild_id == inter.guild.id)
@@ -176,17 +177,18 @@ class WarnModule(commands.Cog):
         else:
             await ctx.send(f':exclamation:`Произошла внутренняя ошибка : {error}`')
 
-    @commands.command()
+    @commands.slash_command()
     @admin_permission_required
-    async def remove_warn(self, ctx: commands.Context, warn_id: int):
-        warn = database.Warn.get_or_none(database.Warn.warn_id == warn_id, database.Warn.guild_id == ctx.guild.id)
+    async def remove_warn(self, inter:disnake.CommandInteraction, warn_id: int):
+        """Удаление варна"""
+        warn = database.Warn.get_or_none(database.Warn.warn_id == warn_id, database.Warn.guild_id == inter.guild.id)
         if warn is None:
-            await ctx.send(f':x: `Такого варна не существует`')
+            await inter.send(f':x: `Такого варна не существует`')
         else:
             user = warn.user_db_id
             # print(warn.user_db_id)
             warn.delete_instance()
-            await ctx.send(
+            await inter.send(
                 f':white_check_mark: `Варн №{warn_id} был удалён! Пользователь {self.bot.get_user(user.user_id).name}`')
 
     @remove_warn.error
@@ -213,7 +215,7 @@ class WarnModule(commands.Cog):
                     database.Warn.delete().where(database.Warn.guild_id == guild.id).execute()
                 warns = database.Warn.select().where(database.Warn.guild_id == guild.id)
                 for warn in warns:
-                    if (warn.datetime + datetime.timedelta(days=warn.expiration)) < datetime.datetime.now(tz=pytz.UTC):
+                    if (warn.datetime.astimezone(tz=pytz.UTC) + datetime.timedelta(days=warn.expiration)) < datetime.datetime.now(tz=pytz.UTC):
                         db_channel = guild.get_channel(db_guild.notify_channel)
                         channel = db_channel if db_channel is not None else guild.system_channel
                         user = guild.get_member(database.User.get(database.User.user_db_id == warn.user_db_id).user_id)
