@@ -40,8 +40,8 @@ class Economy(commands.Cog):
         db_user: database.User = database.User.get(database.User.user_id == inter.author.id,
                                                    database.User.guild_id == inter.guild_id)
         delta: datetime.timedelta = datetime.datetime.now(tz=pytz.UTC) - db_user.last_work_use
-        if delta.seconds < (db_guild.work_delay * 60):
-            seconds1 = db_guild.work_delay * 60 - delta.seconds
+        if delta.total_seconds() < (db_guild.work_delay * 60):
+            seconds1 = db_guild.work_delay * 60 - delta.total_seconds()
             minutes = seconds1 // 60
             seconds = seconds1 % 60
             emb.colour = disnake.Colour(0x03A8F4)
@@ -54,7 +54,7 @@ class Economy(commands.Cog):
         phrase = random.choice(economy.work)
         emb.set_footer(text=f'Запрос №{self._transaction_counter}')
         emb.description = phrase['text'].replace('MONEY', str(cash)).replace('COIN', db_guild.coin_name)
-        db_user.last_work_use = datetime.datetime.now()
+        db_user.last_work_use = datetime.datetime.now(tz=pytz.utc)
         db_user.save()
         await inter.send(embed=emb)
 
@@ -73,7 +73,7 @@ class Economy(commands.Cog):
         else:
             delay = db_guild.gachi_delay
         if delta.total_seconds() < (delay * 60):
-            seconds1 = delay * 60 - delta.seconds
+            seconds1 = delay * 60 - delta.total_seconds()
             minutes = seconds1 // 60
             seconds = seconds1 % 60
             emb.colour = disnake.Colour(0x03A8F4)
@@ -116,8 +116,8 @@ class Economy(commands.Cog):
         db_guild: database.Guild = database.Guild.get(database.Guild.guild_id == inter.guild_id)
         db_user: database.User = database.User.get(database.User.user_id == inter.author.id,
                                                    database.User.guild_id == inter.guild_id)
-        delta: datetime.timedelta = datetime.datetime.now() - db_user.last_crime_use
-        if delta.seconds < (db_guild.crime_delay * 60):
+        delta: datetime.timedelta = datetime.datetime.now(tz=pytz.utc) - db_user.last_crime_use
+        if delta.total_seconds() < (db_guild.crime_delay * 60):
             seconds1 = db_guild.crime_delay * 60 - delta.seconds
             minutes = seconds1 // 60
             seconds = seconds1 % 60
@@ -136,7 +136,7 @@ class Economy(commands.Cog):
             phrase = random.choice(economy.crime_positive)
             db_user.money += cash
         emb.description = phrase['text'].replace('MONEY', str(cash)).replace('COIN', db_guild.coin_name)
-        emb.set_footer(text=f'Запрос №{self._transaction_counter}')
+        emb.set_footer(text=f'Запрос №{self._transaction_counter} Этот текст придумал Сол)')
         db_user.last_crime_use = datetime.datetime.now()
         db_user.save()
         await inter.send(embed=emb)
