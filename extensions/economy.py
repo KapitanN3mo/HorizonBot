@@ -1,13 +1,12 @@
 import datetime
 import random
-
+from assets import emojis
 import pytz
-
 from assets import economy
 import disnake
 from disnake.ext import commands
 from functools import wraps
-from permissions import admin_permission_required
+from permissions import admin_permission_required, developer_permission_required
 import database
 
 
@@ -29,6 +28,23 @@ class Economy(commands.Cog):
     @classmethod
     def increase_transaction_counter(cls):
         cls._transaction_counter += 1
+
+    @commands.slash_command()
+    @transaction
+    @developer_permission_required
+    async def reset_timers(self, inter: disnake.CommandInteraction, user: disnake.Member):
+        """Сбросить таймеры"""
+        try:
+            db_user: database.User = database.User.get(database.User.user_id == user.id,
+                                                       database.User.guild_id == inter.guild_id)
+            db_user.last_crime_use = datetime.datetime(2000, 1, 1, 1, 1, tzinfo=pytz.utc)
+            db_user.last_work_use = datetime.datetime(2000, 1, 1, 1, 1, tzinfo=pytz.utc)
+            db_user.last_gachi_use = datetime.datetime(2000, 1, 1, 1, 1, tzinfo=pytz.utc)
+            db_user.save()
+        except Exception as ex:
+            await inter.send(f'{emojis.exclamation} ```Произошла ошибка {ex}```')
+            return
+        await inter.send(f'{emojis.white_check_mark} `таймеры успешно сброшены`')
 
     @commands.slash_command()
     @transaction
@@ -93,7 +109,7 @@ class Economy(commands.Cog):
                 db_user.is_ass_breaking = True
                 emb.colour = disnake.Colour(0xFF1836)
                 emb.description = 'Упс... В порыве страсти вам порвали очко. Все заработанные деньги ' \
-                                  'вы потратите на лечение. Лечение длится сутки.'
+                                  f'вы потратите на лечение. Лечение длится {db_guild.gachi_delay_after_fail / 60} часов.'
 
                 await inter.send(embed=emb)
             else:
