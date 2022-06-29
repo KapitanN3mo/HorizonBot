@@ -79,7 +79,7 @@ class VoiceJournal:
         if delta.seconds <= 0:
             return 0
         else:
-            #print(delta.seconds)
+            # print(delta.seconds)
             return delta.seconds
 
     @classmethod
@@ -229,15 +229,31 @@ class VoiceJournalView(disnake.ui.View):
             custom_id='back',
             emoji='◀'
         )
+        self.end_button = disnake.ui.Button(
+            style=disnake.ButtonStyle.blurple,
+            custom_id='end',
+            emoji='⏭'
+        )
+        self.begin_button = disnake.ui.Button(
+            style=disnake.ButtonStyle.blurple,
+            custom_id='begin',
+            emoji='⏮'
+        )
+        self.add_item(self.begin_button)
         self.add_item(self.back_button)
         self.back_button.callback = self.back
         self.next_button.callback = self.next
+        self.end_button.callback = self.to_end
+        self.begin_button.callback = self.to_begin
         self.add_item(self.next_button)
+        self.add_item(self.end_button)
         self.render()
 
-    def render(self):
+    def update(self):
         self.journals = VoiceJournal.get_journals_from_db_by_member(self.member)
-        #print(self.journals)
+
+    def render(self):
+        # print(self.journals)
         self.emb = VoiceJournal.pretty_print([json.loads(j.data) for j in self.journals[self.index:self.index + 1]])
         self.emb.set_footer(text=f'Запись {self.index + 1} из {len(self.journals)}')
         self.emb.timestamp = datetime.datetime.now()
@@ -259,6 +275,7 @@ class VoiceJournalView(disnake.ui.View):
 
     async def next(self, inter: disnake.MessageInteraction):
         await inter.response.defer()
+        self.update()
         self.index += 1
         self.render()
         await inter.edit_original_message(embed=self.emb, view=self)
@@ -266,10 +283,25 @@ class VoiceJournalView(disnake.ui.View):
 
     async def back(self, inter: disnake.MessageInteraction):
         await inter.response.defer()
+        self.update()
         self.index -= 1
         self.render()
         await inter.edit_original_message(embed=self.emb, view=self)
         self.interaction = inter
+
+    async def to_end(self, inter: disnake.MessageInteraction):
+        await inter.response.defer()
+        self.update()
+        self.index = len(self.journals) - 1
+        self.render()
+        await inter.edit_original_message(embed=self.emb, view=self)
+
+    async def to_begin(self, inter: disnake.MessageInteraction):
+        await inter.response.defer()
+        self.update()
+        self.index = 0
+        self.render()
+        await inter.edit_original_message(embed=self.emb, view=self)
 
 
 class PrivateVoiceView(disnake.ui.View):
