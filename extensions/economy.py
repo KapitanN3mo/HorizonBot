@@ -39,7 +39,7 @@ class Economy(commands.Cog):
         db_guild: database.Guild = database.Guild.get(database.Guild.guild_id == inter.guild_id)
         db_user: database.User = database.User.get(database.User.user_id == inter.author.id,
                                                    database.User.guild_id == inter.guild_id)
-        delta: datetime.timedelta = datetime.datetime.now(tz=pytz.UTC) - db_user.last_work_use
+        delta: datetime.timedelta = datetime.datetime.now(tz=pytz.UTC) - db_user.last_work_use.astimezone(tz=pytz.UTC)
         if delta.total_seconds() < (db_guild.work_delay * 60):
             seconds1 = db_guild.work_delay * 60 - delta.total_seconds()
             minutes = seconds1 // 60
@@ -116,7 +116,7 @@ class Economy(commands.Cog):
         db_guild: database.Guild = database.Guild.get(database.Guild.guild_id == inter.guild_id)
         db_user: database.User = database.User.get(database.User.user_id == inter.author.id,
                                                    database.User.guild_id == inter.guild_id)
-        delta: datetime.timedelta = datetime.datetime.now(tz=pytz.utc) - db_user.last_crime_use
+        delta: datetime.timedelta = datetime.datetime.now(tz=pytz.utc) - db_user.last_crime_use.astimezone(tz=pytz.UTC)
         if delta.total_seconds() < (db_guild.crime_delay * 60):
             seconds1 = db_guild.crime_delay * 60 - delta.seconds
             minutes = seconds1 // 60
