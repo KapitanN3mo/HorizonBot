@@ -108,6 +108,7 @@ class ProfileModule(commands.Cog):
     def create_guild_profile(cls, guild: disnake.Guild):
         try:
             database.Guild.insert(guild_id=guild.id,
+                                  name=guild.name,
                                   admins=json.dumps([])).execute()
             return 1
         except:

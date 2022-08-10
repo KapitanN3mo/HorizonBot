@@ -1,4 +1,4 @@
 from core import Bot
 
 bot = Bot()
-bot.run()
+bot.run(mode="debug")

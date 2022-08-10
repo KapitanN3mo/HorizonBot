@@ -1,14 +1,18 @@
 import datetime
 import pytz
 import peewee
+import sqlite3
+import core
 import dt
 
-db = peewee.PostgresqlDatabase(host='127.0.0.1',
-                               port=5432,
-                               database='horizon_bot',
-                               user='horizon_bot',
-                               password='s24d300')
-
+if core.Bot.get_run_mode() == 'normal':
+    db = peewee.PostgresqlDatabase(host='127.0.0.1',
+                                   port=5432,
+                                   database='horizon_bot',
+                                   user='horizon_bot',
+                                   password='s24d300')
+else:
+    db = peewee.SqliteDatabase('test_database.db')
 db.autorollback = True
 
 
@@ -23,12 +27,13 @@ def get_time():
 
 class Guild(BaseModel):
     guild_id = peewee.BigIntegerField(primary_key=True)
+    name = peewee.TextField()
     admins = peewee.TextField(null=False)
-    rules = peewee.TextField(null=True)
     notify_channel = peewee.BigIntegerField(null=True)
     clan_channel = peewee.BigIntegerField(null=True)
     bot_channel = peewee.BigIntegerField(null=True)
     private_voice = peewee.BigIntegerField(null=True)
+    storage = peewee.TextField(null=False, default='{}')
 
     minimum_voice_time = peewee.IntegerField(null=False, default=10)
     xp_voice_multiplier = peewee.FloatField(null=False, default=1)

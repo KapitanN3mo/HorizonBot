@@ -1,3 +1,4 @@
+import colorama
 import disnake
 from disnake.ext import commands
 from core import profile
@@ -102,7 +103,7 @@ class Events(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        print('Бот готов, бан-хаммер блестит!')
+        print(colorama.Fore.MAGENTA + '[READY]' + colorama.Style.RESET_ALL + ' Бот готов, бан-хаммер блестит!')
         for task in self.tasks:
             self.bot.loop.create_task(task())
         if 'on_ready' in self.hooks:

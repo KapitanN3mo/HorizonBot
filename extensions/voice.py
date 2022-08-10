@@ -542,8 +542,11 @@ async def add_xp_by_voice_time(member: disnake.Member):
         return
     report = VoiceJournal.create_report(member)
     VoiceJournal.release_journal(member)
-    c_time = report[0]
-    t_time = report[1]
+    try:
+        c_time = report[0]
+        t_time = report[1]
+    except TypeError:
+        return
     if c_time >= db_user.guild_id.minimum_voice_time:
         xp = int(c_time * db_user.guild_id.xp_voice_multiplier / 60)
         db_user.xp += xp
