@@ -69,7 +69,6 @@ class Bot:
 
     @classmethod
     def run(cls, mode='normal'):
-        import core.persistent_storage
         print(colorama.Fore.MAGENTA + head + colorama.Style.RESET_ALL)
         cls.run_mode = mode
         token = cls.settings['tokens'][mode]
